@@ -2,17 +2,17 @@
 pragma solidity ^0.8.0;
 
 import {Script, console} from "forge-std/Script.sol";
-import {YoyoNFT} from "../src/YoyoNFT.sol";
+import {YoyoNft} from "../src/YoyoNft.sol";
 
-contract YoyoNFTScript is Script {
-    YoyoNFT public yoyoNFT;
+contract YoyoNftScript is Script {
+    YoyoNft public yoyoNft;
 
     function setUp() public {}
 
     function run() public {
         vm.startBroadcast();
 
-        yoyoNFT = new YoyoNFT();
+        yoyoNft = new YoyoNft();
 
         vm.stopBroadcast();
     }
