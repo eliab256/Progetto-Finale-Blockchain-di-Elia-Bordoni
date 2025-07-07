@@ -7,24 +7,29 @@ import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
  * @title A Yoga NFT collection
  * @author Elia Bordoni
  * @notice
- * @dev 
+ * @dev
  */
 
-contract YoyoNft is ERC721{
-
+contract YoyoNft is ERC721 {
     /* Errors */
     error YoyoNft__NotOwner();
     error YoyoNft__ValueCantBeZero();
     error YoyoNft__TokenIdDoesNotExist();
     error YoyoNft__ContractBalanceIsZero();
     error YoyoNft__WithdrawFailed();
+    error YoyoNft__ThisContractDoesntAcceptDeposit();
+    error YoyoNft__CallValidFunctionToInteractWithContract();
 
     /* Type declarations */
 
     /* State variables */
     string private s_baseURI;
+    address public immutable i_owner;
 
     /* Events */
+
+    event YoyoNft__WithdrawCompleted(uint256 amount, uint256 timestamp);
+    event YoyoNft__DepositCompleted(uint256 amount, uint256 timestamp);
 
     /* Modifiers */
     modifier yoyoOnlyOwner() {
@@ -67,5 +72,4 @@ contract YoyoNft is ERC721{
         }
         emit YoyoNft__DepositCompleted(msg.value, block.timestamp);
     }
-
 }
