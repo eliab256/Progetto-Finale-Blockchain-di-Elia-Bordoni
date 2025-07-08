@@ -208,6 +208,10 @@ contract YoyoNft is ERC721 {
         return i_owner;
     }
 
+    function getAuctionContract() public view returns (address) {
+        return i_auctionContract;
+    }
+
     function getBasicMintPrice() public view returns (uint256) {
         return s_basicMintPrice;
     }

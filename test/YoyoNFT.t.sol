@@ -9,6 +9,9 @@ contract YoyoNftTest is Test, CodeConstant {
     YoyoNft public yoyoNft;
     HelperConfig public helperConfig;
 
+    string public constant BASE_URI_EXAMPLE =
+        "https://example.com/api/metadata/";
+
     //Test Partecipants
     address public deployer;
     address public AUCTION_CONTRACT = makeAddr("AuctionContract");
@@ -24,14 +27,15 @@ contract YoyoNftTest is Test, CodeConstant {
     uint256 public constant STARTING_BALANCE_USER_NO_BALANCE = 0 ether;
 
     function setUp() public {
+        deployer = msg.sender;
+
+        vm.startPrank(deployer);
         yoyoNft = new YoyoNft(
             YoyoNft.ConstructorParams({
-                baseURI: "https://example.com/api/metadata/",
+                baseURI: BASE_URI_EXAMPLE,
                 auctionContract: address(AUCTION_CONTRACT)
             })
         );
-
-        deployer = msg.sender;
 
         //Set up balances for each address
         vm.deal(deployer, STARTING_BALANCE_DEPLOYER);
@@ -48,5 +52,54 @@ contract YoyoNftTest is Test, CodeConstant {
         console2.log("User 1 Address: ", USER_1);
         console2.log("User 2 Address: ", USER_2);
         console2.log("User No Balance Address: ", USER_NO_BALANCE);
+    }
+
+    function testNameAndSymbol() public {
+        string memory expectedName = "Yoyo Collection";
+        string memory expectedSymbol = "YOYO";
+
+        assertEq(yoyoNft.name(), expectedName);
+        assertEq(yoyoNft.symbol(), expectedSymbol);
+    }
+
+    function testContructorParameters() public {
+        assertEq(yoyoNft.getAuctionContract(), AUCTION_CONTRACT);
+        assertEq(yoyoNft.getBaseURI(), BASE_URI_EXAMPLE);
+        assertEq(yoyoNft.getContractOwner(), deployer);
+        assertEq(yoyoNft.getTotalMinted(), 0);
+    }
+
+    function testIfDeployRevertDueToZeroBaseURI() public {
+        vm.expectRevert(YoyoNft.YoyoNft__ValueCantBeZero.selector);
+        new YoyoNft(
+            YoyoNft.ConstructorParams({
+                baseURI: "",
+                auctionContract: AUCTION_CONTRACT
+            })
+        );
+    }
+
+    function testIfDeployRevertDueToInvalidAuctionContract() public {
+        vm.expectRevert(YoyoNft.YoyoNft__InvalidAddress.selector);
+        new YoyoNft(
+            YoyoNft.ConstructorParams({
+                baseURI: BASE_URI_EXAMPLE,
+                auctionContract: address(0)
+            })
+        );
+    }
+
+    function testIfReceiveFunctionReverts() public {
+        vm.expectRevert(
+            YoyoNft.YoyoNft__ThisContractDoesntAcceptDeposit.selector
+        );
+        address(yoyoNft).call{value: 1 ether}("");
+    }
+
+    function testIfFallbackFunctionReverts() public {
+        vm.expectRevert(
+            YoyoNft.YoyoNft__CallValidFunctionToInteractWithContract.selector
+        );
+        address(yoyoNft).call{value: 1 ether}("metadata");
     }
 }
