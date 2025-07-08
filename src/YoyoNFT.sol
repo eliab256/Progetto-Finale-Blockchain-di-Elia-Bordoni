@@ -37,7 +37,6 @@ contract YoyoNft is ERC721 {
     address private immutable i_owner;
     address private immutable i_auctionContract;
 
-    mapping(uint256 => string) private s_tokenIdToURI;
     //mapping(address => uint256) private s_accountBalance;
 
     /* Events */
@@ -99,7 +98,7 @@ contract YoyoNft is ERC721 {
 
     function withdraw() public yoyoOnlyOwner {
         uint256 contractBalance = address(this).balance;
-        if (address(this).balance == 0) {
+        if (contractBalance == 0) {
             revert YoyoNft__ContractBalanceIsZero();
         }
         (bool success, ) = payable(i_owner).call{value: contractBalance}("");
@@ -143,15 +142,7 @@ contract YoyoNft is ERC721 {
             revert YoyoNft__NotEnoughEtherSent();
         }
         _safeMint(_to, _tokenId);
-        string memory tokenURIComplete = string(
-            abi.encodePacked(
-                s_baseURI,
-                "/",
-                Strings.toString(_tokenId),
-                ".json"
-            )
-        );
-        s_tokenIdToURI[_tokenId] = tokenURIComplete;
+        string memory tokenURIComplete = tokenURI(_tokenId);
         s_tokenCounter++;
 
         emit YoyoNft__NftMinted(
@@ -175,12 +166,23 @@ contract YoyoNft is ERC721 {
     }
 
     function tokenURI(
-        uint256 tokenId
+        uint256 _tokenId
     ) public view override returns (string memory) {
-        if (tokenId >= MAX_NFT_SUPPLY) {
+        if (_tokenId >= MAX_NFT_SUPPLY) {
             revert YoyoNft__TokenIdDoesNotExist();
         }
-        return s_tokenIdToURI[tokenId];
+        if (_ownerOf(_tokenId) == address(0)) {
+            revert YoyoNft__TokenIdDoesNotExist();
+        }
+        return
+            string(
+                abi.encodePacked(
+                    s_baseURI,
+                    "/",
+                    Strings.toString(_tokenId),
+                    ".json"
+                )
+            );
     }
 
     function getBaseURI() public view returns (string memory) {
