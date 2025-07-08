@@ -92,11 +92,11 @@ contract YoyoNft is ERC721 {
     }
 
     function withdraw() public yoyoOnlyOwner {
+        uint256 contractBalance = address(this).balance;
         if (address(this).balance == 0) {
             revert YoyoNft__ContractBalanceIsZero();
         }
-        uint256 contractBalance = address(this).balance;
-        bool success = payable(i_owner).send(contractBalance);
+        (bool success, ) = payable(i_owner).call{value: contractBalance}("");
         if (success) {
             emit YoyoNft__WithdrawCompleted(contractBalance, block.timestamp);
         } else {
@@ -111,7 +111,7 @@ contract YoyoNft is ERC721 {
         emit YoyoNft__DepositCompleted(msg.value, block.timestamp);
     }
 
-    function setBasicMintPrice(uint256 _newBasicPrice) public {
+    function setBasicMintPrice(uint256 _newBasicPrice) public yoyoOnlyOwner {
         if (_newBasicPrice == 0) {
             revert YoyoNft__ValueCantBeZero();
         }
@@ -124,13 +124,13 @@ contract YoyoNft is ERC721 {
         address _to,
         uint256 _tokenId
     ) public payable yoyoOnlyAuctionContract {
-        if (ownerOf(_tokenId) != address(0)) {
+        if (_ownerOf(_tokenId) != address(0)) {
             revert YoyoNft__NftAlreadyMinted();
         }
-        if (s_tokenCounter >= MAX_NFT_SUPPLY) {
+        if (s_tokenCounter > MAX_NFT_SUPPLY) {
             revert YoyoNft__NftMaxSupplyReached();
         }
-        if (_tokenId < 0 || _tokenId > MAX_NFT_SUPPLY) {
+        if (_tokenId >= MAX_NFT_SUPPLY) {
             revert YoyoNft__TokenIdDoesNotExist();
         }
         if (msg.value < s_basicMintPrice) {
@@ -171,7 +171,7 @@ contract YoyoNft is ERC721 {
     function tokenURI(
         uint256 tokenId
     ) public view override returns (string memory) {
-        if (tokenId > MAX_NFT_SUPPLY || tokenId < 0) {
+        if (tokenId >= MAX_NFT_SUPPLY) {
             revert YoyoNft__TokenIdDoesNotExist();
         }
         return s_tokenIdToURI[tokenId];
