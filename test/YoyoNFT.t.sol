@@ -54,6 +54,9 @@ contract YoyoNftTest is Test, CodeConstant {
         console2.log("User No Balance Address: ", USER_NO_BALANCE);
     }
 
+    /*//////////////////////////////////////////////////////////////
+            Test the constructor parameters assignments
+    //////////////////////////////////////////////////////////////*/
     function testNameAndSymbol() public {
         string memory expectedName = "Yoyo Collection";
         string memory expectedSymbol = "YOYO";
@@ -89,6 +92,9 @@ contract YoyoNftTest is Test, CodeConstant {
         );
     }
 
+    /*//////////////////////////////////////////////////////////////
+            Test receive and fallback functions
+    //////////////////////////////////////////////////////////////*/
     function testIfReceiveFunctionReverts() public {
         vm.expectRevert(
             YoyoNft.YoyoNft__ThisContractDoesntAcceptDeposit.selector
@@ -102,4 +108,47 @@ contract YoyoNftTest is Test, CodeConstant {
         );
         address(yoyoNft).call{value: 1 ether}("metadata");
     }
+
+     /*//////////////////////////////////////////////////////////////
+                        Test modifiers
+    //////////////////////////////////////////////////////////////*/
+    function testIfYoyoOnlyOwnerModifierWorks() public {
+        vm.startPrank(USER_1);
+        vm.expectRevert(YoyoNft.YoyoNft__NotOwner.selector);
+        yoyoNft.setBasicMintPrice(_newBasicPrice);(0.002 ether);
+        vm.stopPrank();
+    }
+
+    function testIfYoyoOnlyAuctionContractModifierWorks() public {
+        uint256 tokenId = 1;
+        address recipient = address(USER_2);
+        vm.startPrank(USER_1);
+        vm.expectRevert(YoyoNft.YoyoNft__NotAuctionContract.selector);
+        yoyoNft.mintNft(recipient, tokenId);
+        vm.stopPrank();
+    }
+
+    /*//////////////////////////////////////////////////////////////
+            Test minting NFT function
+    //////////////////////////////////////////////////////////////*/
+
+
+
+    /*//////////////////////////////////////////////////////////////
+                Test deposit and withdraw functions  
+    //////////////////////////////////////////////////////////////*/
+
+
+
+
+    /*//////////////////////////////////////////////////////////////
+                Test mintPrice functions 
+    //////////////////////////////////////////////////////////////*/
+
+
+
+
+    /*//////////////////////////////////////////////////////////////
+                Test getters functions
+    //////////////////////////////////////////////////////////////*/
 }
