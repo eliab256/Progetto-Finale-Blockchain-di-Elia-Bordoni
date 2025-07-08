@@ -25,26 +25,35 @@ contract YoyoNft is ERC721 {
     error YoyoNft__WithdrawFailed();
     error YoyoNft__ThisContractDoesntAcceptDeposit();
     error YoyoNft__CallValidFunctionToInteractWithContract();
+    error YoyoNft__NotAuctionContract();
 
     /* Type declarations */
 
     /* State variables */
     uint256 private s_tokenCounter;
     uint256 public constant MAX_NFT_SUPPLY = 20;
-    uint256 private s_mintPrice = 0.01 ether;
+    uint256 private s_basicMintPrice = 0.01 ether;
     string private s_baseURI;
     address private immutable i_owner;
+    address private immutable i_auctionContract;
 
     mapping(uint256 => string) private s_tokenIdToURI;
+    //mapping(address => uint256) private s_accountBalance;
 
     /* Events */
     event YoyoNft__WithdrawCompleted(uint256 amount, uint256 timestamp);
     event YoyoNft__DepositCompleted(uint256 amount, uint256 timestamp);
-    event YoyoNft__MintPriceUpdated(uint256 newPrice, uint256 timestamp);
+    event YoyoNft__MintPriceUpdated(uint256 newBasicPrice, uint256 timestamp);
     event YoyoNft__NftMinted(
         address indexed owner,
         uint256 indexed tokenId,
         string tokenURI,
+        uint256 timestamp
+    );
+    event YoyoNft__NftTransferred(
+        address indexed from,
+        address indexed to,
+        uint256 indexed tokenId,
         uint256 timestamp
     );
 
@@ -56,11 +65,22 @@ contract YoyoNft is ERC721 {
         _;
     }
 
+    modifier yoyoOnlyAuctionContract() {
+        if (msg.sender != i_auctionContract) {
+            revert YoyoNft__NotAuctionContract();
+        }
+        _;
+    }
+
     /* Functions */
-    constructor(string memory baseURI) ERC721("Yoyo Collection", "YOYO") {
+    constructor(
+        string memory baseURI,
+        address auctionContract
+    ) ERC721("Yoyo Collection", "YOYO") {
         i_owner = msg.sender;
         s_baseURI = baseURI;
         s_tokenCounter = 0;
+        i_auctionContract = auctionContract;
     }
 
     receive() external payable {
@@ -91,31 +111,49 @@ contract YoyoNft is ERC721 {
         emit YoyoNft__DepositCompleted(msg.value, block.timestamp);
     }
 
-    function setMintPrice(uint256 _price) public yoyoOnlyOwner {
-        if (_price == 0) {
+    function setBasicMintPrice(uint256 _newBasicPrice) public {
+        if (_newBasicPrice == 0) {
             revert YoyoNft__ValueCantBeZero();
         }
-        s_mintPrice = _price;
+        s_basicMintPrice = _newBasicPrice;
 
-        emit YoyoNft__MintPriceUpdated(_price, block.timestamp);
+        emit YoyoNft__MintPriceUpdated(_newBasicPrice, block.timestamp);
     }
 
-    function mintNft(uint256 tokenId) public payable {
+    function mintNft(
+        address _to,
+        uint256 _tokenId
+    ) public payable yoyoOnlyAuctionContract {
+        if (ownerOf(_tokenId) != address(0)) {
+            revert YoyoNft__NftAlreadyMinted();
+        }
         if (s_tokenCounter >= MAX_NFT_SUPPLY) {
             revert YoyoNft__NftMaxSupplyReached();
         }
-        if (tokenId < 0 || tokenId > MAX_NFT_SUPPLY) {
+        if (_tokenId < 0 || _tokenId > MAX_NFT_SUPPLY) {
             revert YoyoNft__TokenIdDoesNotExist();
         }
-        if (msg.value < s_mintPrice) {
+        if (msg.value < s_basicMintPrice) {
             revert YoyoNft__NotEnoughEtherSent();
         }
-        _safeMint(msg.sender, tokenId);
+        _safeMint(_to, _tokenId);
         string memory tokenURIComplete = string(
-            abi.encodePacked(s_baseURI, "/", Strings.toString(tokenId), ".json")
+            abi.encodePacked(
+                s_baseURI,
+                "/",
+                Strings.toString(_tokenId),
+                ".json"
+            )
         );
-        s_tokenIdToURI[tokenId] = tokenURIComplete;
+        s_tokenIdToURI[_tokenId] = tokenURIComplete;
         s_tokenCounter++;
+
+        emit YoyoNft__NftMinted(
+            _to,
+            _tokenId,
+            tokenURIComplete,
+            block.timestamp
+        );
     }
 
     function transferNft(address to, uint256 tokenId) public {
@@ -126,6 +164,8 @@ contract YoyoNft is ERC721 {
             revert YoyoNft__NotOwner();
         }
         _safeTransfer(msg.sender, to, tokenId);
+
+        emit YoyoNft__NftTransferred(msg.sender, to, tokenId, block.timestamp);
     }
 
     function tokenURI(
@@ -159,7 +199,7 @@ contract YoyoNft is ERC721 {
         return i_owner;
     }
 
-    function getMintPrice() public view returns (uint256) {
-        return s_mintPrice;
+    function getBasicMintPrice() public view returns (uint256) {
+        return s_basicMintPrice;
     }
 }
