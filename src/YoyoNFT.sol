@@ -28,6 +28,10 @@ contract YoyoNft is ERC721 {
     error YoyoNft__NotAuctionContract();
 
     /* Type declarations */
+    struct ConstructorParams {
+        string baseURI;
+        address auctionContract;
+    }
 
     /* State variables */
     uint256 private s_tokenCounter;
@@ -36,8 +40,6 @@ contract YoyoNft is ERC721 {
     string private s_baseURI;
     address private immutable i_owner;
     address private immutable i_auctionContract;
-
-    //mapping(address => uint256) private s_accountBalance;
 
     /* Events */
     event YoyoNft__WithdrawCompleted(uint256 amount, uint256 timestamp);
@@ -73,19 +75,18 @@ contract YoyoNft is ERC721 {
 
     /* Functions */
     constructor(
-        string memory baseURI,
-        address auctionContract
+        ConstructorParams memory _params
     ) ERC721("Yoyo Collection", "YOYO") {
-        if (bytes(baseURI).length == 0) {
+        if (bytes(_params.baseURI).length == 0) {
             revert YoyoNft__ValueCantBeZero();
         }
-        if (auctionContract == address(0)) {
+        if (_params.auctionContract == address(0)) {
             revert YoyoNft__InvalidAddress();
         }
         i_owner = msg.sender;
-        s_baseURI = baseURI;
+        s_baseURI = _params.baseURI;
         s_tokenCounter = 0;
-        i_auctionContract = auctionContract;
+        i_auctionContract = _params.auctionContract;
     }
 
     receive() external payable {
@@ -128,7 +129,7 @@ contract YoyoNft is ERC721 {
     function mintNft(
         address _to,
         uint256 _tokenId
-    ) public payable yoyoOnlyAuctionContract {
+    ) external payable yoyoOnlyAuctionContract {
         if (_ownerOf(_tokenId) != address(0)) {
             revert YoyoNft__NftAlreadyMinted();
         }
