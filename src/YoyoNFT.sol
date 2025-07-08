@@ -77,6 +77,12 @@ contract YoyoNft is ERC721 {
         string memory baseURI,
         address auctionContract
     ) ERC721("Yoyo Collection", "YOYO") {
+        if (bytes(baseURI).length == 0) {
+            revert YoyoNft__ValueCantBeZero();
+        }
+        if (auctionContract == address(0)) {
+            revert YoyoNft__InvalidAddress();
+        }
         i_owner = msg.sender;
         s_baseURI = baseURI;
         s_tokenCounter = 0;
