@@ -130,17 +130,20 @@ contract YoyoNft is ERC721 {
         address _to,
         uint256 _tokenId
     ) external payable yoyoOnlyAuctionContract {
+        if (s_tokenCounter == MAX_NFT_SUPPLY) {
+            revert YoyoNft__NftMaxSupplyReached();
+        }
         if (_ownerOf(_tokenId) != address(0)) {
             revert YoyoNft__NftAlreadyMinted();
-        }
-        if (s_tokenCounter > MAX_NFT_SUPPLY) {
-            revert YoyoNft__NftMaxSupplyReached();
         }
         if (_tokenId >= MAX_NFT_SUPPLY) {
             revert YoyoNft__TokenIdDoesNotExist();
         }
         if (msg.value < s_basicMintPrice) {
             revert YoyoNft__NotEnoughEtherSent();
+        }
+        if (_to == address(0)) {
+            revert YoyoNft__InvalidAddress();
         }
         _safeMint(_to, _tokenId);
         string memory tokenURIComplete = tokenURI(_tokenId);

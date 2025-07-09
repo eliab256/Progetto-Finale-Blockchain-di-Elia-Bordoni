@@ -45,6 +45,8 @@ contract YoyoNftTest is Test, CodeConstant {
         vm.deal(USER_2, STARTING_BALANCE_USER_2);
         vm.deal(USER_NO_BALANCE, STARTING_BALANCE_USER_NO_BALANCE);
 
+        vm.stopPrank();
+
         //partecipants address consoleLog
         console2.log("Deployer Address: ", deployer);
         console2.log("YoyoNft Contract Address: ", address(yoyoNft));
@@ -121,25 +123,281 @@ contract YoyoNftTest is Test, CodeConstant {
     function testIfYoyoOnlyAuctionContractModifierWorks() public {
         uint256 tokenId = 1;
         address recipient = address(USER_2);
-        vm.prank(USER_1);
-        vm.expectRevert(YoyoNft.YoyoNft__NotAuctionContract.selector);
 
+        vm.expectRevert(YoyoNft.YoyoNft__NotAuctionContract.selector);
+        vm.prank(USER_1);
         yoyoNft.mintNft{value: 1 ether}(recipient, tokenId);
     }
-
-    /*//////////////////////////////////////////////////////////////
-            Test minting NFT function
-    //////////////////////////////////////////////////////////////*/
 
     /*//////////////////////////////////////////////////////////////
                 Test deposit and withdraw functions  
     //////////////////////////////////////////////////////////////*/
 
+    function testIfDepositWorksAndEmitsEvent() public {
+        uint256 depositAmount = 0.001 ether;
+
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit YoyoNft.YoyoNft__DepositCompleted(depositAmount, block.timestamp);
+        yoyoNft.deposit{value: depositAmount}();
+        assertEq(
+            address(yoyoNft).balance - STARTING_BALANCE_YOYO_CONTRACT,
+            depositAmount
+        );
+    }
+
+    function testIfDepositRevertsIfValueIsZero() public {
+        vm.prank(deployer);
+        vm.expectRevert(YoyoNft.YoyoNft__ValueCantBeZero.selector);
+        yoyoNft.deposit{value: 0}();
+    }
+
+    function testIfWithdrawWorksAndEmitsEvent() public {
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit YoyoNft.YoyoNft__WithdrawCompleted(
+            STARTING_BALANCE_YOYO_CONTRACT,
+            block.timestamp
+        );
+        yoyoNft.withdraw();
+        assertEq(address(yoyoNft).balance, 0);
+        assertEq(
+            deployer.balance,
+            STARTING_BALANCE_DEPLOYER + STARTING_BALANCE_YOYO_CONTRACT
+        );
+    }
+
+    function testIfWithdrawRevertsIfContractBalanceIsZero() public {
+        vm.deal(address(yoyoNft), 0);
+        vm.prank(deployer);
+        vm.expectRevert(YoyoNft.YoyoNft__ContractBalanceIsZero.selector);
+        yoyoNft.withdraw();
+    }
+
     /*//////////////////////////////////////////////////////////////
                 Test mintPrice functions 
     //////////////////////////////////////////////////////////////*/
 
+    function testIfSetBasicMintPriceRevertsifPriceIsZero() public {
+        vm.prank(deployer);
+        vm.expectRevert(YoyoNft.YoyoNft__ValueCantBeZero.selector);
+        yoyoNft.setBasicMintPrice(0);
+    }
+
+    function testIfsetBasicMintPriceWorksAndEmitsEvent() public {
+        uint256 newPrice = 0.003 ether;
+
+        vm.prank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit YoyoNft.YoyoNft__MintPriceUpdated(newPrice, block.timestamp);
+        yoyoNft.setBasicMintPrice(newPrice);
+
+        assertEq(yoyoNft.getBasicMintPrice(), newPrice);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                Test mint NFT function
+    //////////////////////////////////////////////////////////////*/
+    function testIfMintNftWorksAndEmitsEvent() public {
+        uint256 tokenId = 1;
+        address recipient = address(USER_2);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(recipient, tokenId);
+        emit YoyoNft.YoyoNft__NftMinted(
+            recipient,
+            tokenId,
+            yoyoNft.tokenURI(tokenId),
+            block.timestamp
+        );
+
+        assertEq(yoyoNft.ownerOf(tokenId), recipient);
+    }
+
+    function testIfMintNftUpdatesTotalMinted() public {
+        uint256 tokenId = 1;
+        uint256 secondTokenId = 2;
+        address recipient = address(USER_2);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(recipient, tokenId);
+        assertEq(yoyoNft.getTotalMinted(), 1);
+
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(recipient, secondTokenId);
+        assertEq(yoyoNft.getTotalMinted(), 2);
+    }
+
+    function testIfMintNftRevertsIfNotEnoughEthSent() public {
+        uint256 tokenId = 1;
+        address recipient = address(USER_2);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        vm.prank(AUCTION_CONTRACT);
+        vm.expectRevert(YoyoNft.YoyoNft__NotEnoughEtherSent.selector);
+        yoyoNft.mintNft{value: mintPrice - 0.00001 ether}(recipient, tokenId);
+    }
+
+    function testIfMintNftRevertsIfNftIsAlreadyMinted() public {
+        uint256 tokenId = 1;
+        address recipient = address(USER_2);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        vm.prank(AUCTION_CONTRACT); //first mint
+        yoyoNft.mintNft{value: mintPrice}(recipient, tokenId);
+
+        vm.prank(AUCTION_CONTRACT); //try to mint again same tokenId
+        vm.expectRevert(YoyoNft.YoyoNft__NftAlreadyMinted.selector);
+        yoyoNft.mintNft{value: mintPrice}(recipient, tokenId);
+    }
+
+    function testIfNftMintRevertsIfRecipientIsZeroAddress() public {
+        uint256 tokenId = 1;
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        vm.prank(AUCTION_CONTRACT);
+        vm.expectRevert(YoyoNft.YoyoNft__InvalidAddress.selector);
+        yoyoNft.mintNft{value: mintPrice}(address(0), tokenId);
+    }
+
+    function testIfMintNftRevertsDueToInvalidTokenId() public {
+        uint256 invalidTokenId = yoyoNft.MAX_NFT_SUPPLY(); // This is an invalid tokenId
+        address recipient = address(USER_2);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        vm.prank(AUCTION_CONTRACT);
+        vm.expectRevert(YoyoNft.YoyoNft__TokenIdDoesNotExist.selector);
+        yoyoNft.mintNft{value: mintPrice}(recipient, invalidTokenId);
+    }
+
+    function testIfMintNftRevertsIfMaxSupplyReached() public {
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+        // Mint all NFTs to reach max supply
+        for (uint256 i = 0; i < yoyoNft.MAX_NFT_SUPPLY(); i++) {
+            vm.prank(AUCTION_CONTRACT);
+            yoyoNft.mintNft{value: mintPrice}(address(USER_1), i);
+        }
+
+        uint256 tokenId = 1;
+        address recipient = address(USER_2);
+
+        vm.expectRevert(YoyoNft.YoyoNft__NftMaxSupplyReached.selector);
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(recipient, tokenId);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                Test transfer NFT function
+    //////////////////////////////////////////////////////////////*/
+    function testIfTransferNftWorksAndEmitsEvent() public {
+        uint256 tokenId = 1;
+        address recipient = address(USER_2);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        // Mint the NFT first
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(address(USER_1), tokenId);
+
+        vm.prank(USER_1);
+        vm.expectEmit(true, true, true, true);
+        emit YoyoNft.YoyoNft__NftTransferred(
+            USER_1,
+            recipient,
+            tokenId,
+            block.timestamp
+        );
+        yoyoNft.transferNft(recipient, tokenId);
+
+        assertEq(yoyoNft.ownerOf(tokenId), recipient);
+    }
+
+    function testIfTransferNftRevertsIfToAddressIsZero() public {
+        uint256 tokenId = 1;
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        // Mint the NFT first
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(address(USER_1), tokenId);
+
+        vm.prank(USER_1);
+        vm.expectRevert(YoyoNft.YoyoNft__InvalidAddress.selector);
+        yoyoNft.transferNft(address(0), tokenId);
+    }
+
+    function testIfTransferNftRevertsIfNotOwnerCallFunction() public {
+        uint256 tokenId = 1;
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        // Mint the NFT first
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(address(USER_1), tokenId);
+
+        vm.prank(USER_2);
+        vm.expectRevert(YoyoNft.YoyoNft__NotOwner.selector);
+        yoyoNft.transferNft(USER_NO_BALANCE, tokenId);
+    }
+
     /*//////////////////////////////////////////////////////////////
                 Test getters functions
     //////////////////////////////////////////////////////////////*/
+    function testGetBaseURI() public {
+        assertEq(yoyoNft.getBaseURI(), BASE_URI_EXAMPLE);
+    }
+
+    function testGetTotalMinted() public {
+        assertEq(yoyoNft.getTotalMinted(), 0);
+
+        uint256 tokenId = 5;
+        address recipient = address(USER_2);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        // Mint the NFT first
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(recipient, tokenId);
+
+        assertEq(yoyoNft.getTotalMinted(), 1);
+    }
+
+    function testGetOwnerFromTokenId() public {
+        uint256 tokenId = 1;
+        address recipient = address(USER_2);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        // Mint the NFT first
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(recipient, tokenId);
+
+        assertEq(yoyoNft.getOwnerFromTokenId(tokenId), recipient);
+    }
+
+    function testGetAccountBalance() public {
+        assertEq(yoyoNft.getAccountBalance(USER_1), 0);
+
+        uint256 tokenId = 1;
+        address recipient = address(USER_1);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        // Mint the NFT first
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(recipient, tokenId);
+
+        assertEq(yoyoNft.getAccountBalance(USER_1), 1);
+    }
+
+    function testGetContractOwner() public {
+        assertEq(yoyoNft.getContractOwner(), deployer);
+    }
+
+    function testGetAuctionContract() public {
+        assertEq(yoyoNft.getAuctionContract(), AUCTION_CONTRACT);
+    }
+
+    function testGetBasicMintPrice() public {
+        uint256 newPrice = 0.003 ether;
+        vm.prank(deployer);
+        yoyoNft.setBasicMintPrice(newPrice);
+        assertEq(yoyoNft.getBasicMintPrice(), newPrice);
+    }
 }
