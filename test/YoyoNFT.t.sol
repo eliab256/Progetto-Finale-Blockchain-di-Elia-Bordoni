@@ -109,44 +109,35 @@ contract YoyoNftTest is Test, CodeConstant {
         address(yoyoNft).call{value: 1 ether}("metadata");
     }
 
-     /*//////////////////////////////////////////////////////////////
+    /*//////////////////////////////////////////////////////////////
                         Test modifiers
     //////////////////////////////////////////////////////////////*/
     function testIfYoyoOnlyOwnerModifierWorks() public {
-        vm.startPrank(USER_1);
         vm.expectRevert(YoyoNft.YoyoNft__NotOwner.selector);
-        yoyoNft.setBasicMintPrice(_newBasicPrice);(0.002 ether);
-        vm.stopPrank();
+        vm.prank(USER_1);
+        yoyoNft.setBasicMintPrice(0.002 ether);
     }
 
     function testIfYoyoOnlyAuctionContractModifierWorks() public {
         uint256 tokenId = 1;
         address recipient = address(USER_2);
-        vm.startPrank(USER_1);
+        vm.prank(USER_1);
         vm.expectRevert(YoyoNft.YoyoNft__NotAuctionContract.selector);
-        yoyoNft.mintNft(recipient, tokenId);
-        vm.stopPrank();
+
+        yoyoNft.mintNft{value: 1 ether}(recipient, tokenId);
     }
 
     /*//////////////////////////////////////////////////////////////
             Test minting NFT function
     //////////////////////////////////////////////////////////////*/
 
-
-
     /*//////////////////////////////////////////////////////////////
                 Test deposit and withdraw functions  
     //////////////////////////////////////////////////////////////*/
 
-
-
-
     /*//////////////////////////////////////////////////////////////
                 Test mintPrice functions 
     //////////////////////////////////////////////////////////////*/
-
-
-
 
     /*//////////////////////////////////////////////////////////////
                 Test getters functions
