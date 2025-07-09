@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {Test, console2} from "forge-std/Test.sol";
 import {YoyoNft} from "../src/YoyoNFT.sol";
 import {HelperConfig, CodeConstant} from "../script/HelperConfig.s.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract YoyoNftTest is Test, CodeConstant {
     YoyoNft public yoyoNft;
@@ -342,6 +343,41 @@ contract YoyoNftTest is Test, CodeConstant {
     /*//////////////////////////////////////////////////////////////
                 Test getters functions
     //////////////////////////////////////////////////////////////*/
+    function testTokenURIRevertsIfTokenIdDoesNotExist() public {
+        uint256 invalidTokenId = yoyoNft.MAX_NFT_SUPPLY(); // This is an invalid tokenId
+
+        vm.expectRevert(YoyoNft.YoyoNft__TokenIdDoesNotExist.selector);
+        yoyoNft.tokenURI(invalidTokenId);
+    }
+
+    function testTokenURIRevertsIfTokenIdNotMinted() public {
+        uint256 tokenId = 1;
+
+        vm.expectRevert(YoyoNft.YoyoNft__NftNotMinted.selector);
+        yoyoNft.tokenURI(tokenId);
+    }
+
+    function testTokenURIReturnsCorrectURI() public {
+        uint256 tokenId = 1;
+        address recipient = address(USER_2);
+        uint256 mintPrice = yoyoNft.getBasicMintPrice();
+
+        // Mint the NFT first
+        vm.prank(AUCTION_CONTRACT);
+        yoyoNft.mintNft{value: mintPrice}(recipient, tokenId);
+
+        string memory expectedURI = string(
+            abi.encodePacked(
+                BASE_URI_EXAMPLE,
+                "/",
+                Strings.toString(tokenId),
+                ".json"
+            )
+        );
+
+        assertEq(yoyoNft.tokenURI(tokenId), expectedURI);
+    }
+
     function testGetBaseURI() public {
         assertEq(yoyoNft.getBaseURI(), BASE_URI_EXAMPLE);
     }

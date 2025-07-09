@@ -19,6 +19,7 @@ contract YoyoNft is ERC721 {
     error YoyoNft__TokenIdDoesNotExist();
     error YoyoNft__TokenIdAlreadyExists();
     error YoyoNft__NftAlreadyMinted();
+    error YoyoNft__NftNotMinted();
     error YoyoNft__NftMaxSupplyReached();
     error YoyoNft__NotEnoughEtherSent();
     error YoyoNft__ContractBalanceIsZero();
@@ -176,7 +177,7 @@ contract YoyoNft is ERC721 {
             revert YoyoNft__TokenIdDoesNotExist();
         }
         if (_ownerOf(_tokenId) == address(0)) {
-            revert YoyoNft__TokenIdDoesNotExist();
+            revert YoyoNft__NftNotMinted();
         }
         return
             string(
