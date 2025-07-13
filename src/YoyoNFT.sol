@@ -11,7 +11,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
  * @dev
  */
 
-contract YoyoNft is ERC721 {
+contract YoyoNFT is ERC721 {
     /* Errors */
     error YoyoNft__NotOwner();
     error YoyoNft__InvalidAddress();
@@ -218,5 +218,11 @@ contract YoyoNft is ERC721 {
 
     function getBasicMintPrice() public view returns (uint256) {
         return s_basicMintPrice;
+    }
+
+    function getIfTokenIdIsMintable(
+        uint256 _tokenId
+    ) public view returns (bool) {
+        return _ownerOf(_tokenId) == address(0) && _tokenId < MAX_NFT_SUPPLY;
     }
 }
