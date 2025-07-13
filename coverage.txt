@@ -1,16 +1,10 @@
 
 
 Uncovered for src/YoyoNFT.sol:
-- Branch (branch: 0, path: 0) (location: source ID 38, lines 63..66, bytes 1922..1973, hits: 0)
-- Line (location: source ID 38, lines 64..65, bytes 1936..1962, hits: 0)
-- Statement (location: source ID 38, lines 64..65, bytes 1936..1962, hits: 0)
-- Branch (branch: 5, path: 1) (location: source ID 38, lines 106..110, bytes 3145..3298, hits: 0)
-- Line (location: source ID 38, lines 109..110, bytes 3268..3300, hits: 0)
-- Statement (location: source ID 38, lines 109..110, bytes 3268..3300, hits: 0)
-- Branch (branch: 15, path: 0) (location: source ID 38, lines 175..178, bytes 5251..5313, hits: 0)
-- Line (location: source ID 38, lines 176..177, bytes 5265..5302, hits: 0)
-- Statement (location: source ID 38, lines 176..177, bytes 5265..5302, hits: 0)
-- Branch (branch: 16, path: 0) (location: source ID 38, lines 178..181, bytes 5360..5422, hits: 0)
-- Line (location: source ID 38, lines 179..180, bytes 5374..5411, hits: 0)
-- Statement (location: source ID 38, lines 179..180, bytes 5374..5411, hits: 0)
+- Branch (branch: 0, path: 0) (location: source ID 38, lines 64..67, bytes 1957..2008, hits: 0)
+- Line (location: source ID 38, lines 65..66, bytes 1971..1997, hits: 0)
+- Statement (location: source ID 38, lines 65..66, bytes 1971..1997, hits: 0)
+- Branch (branch: 5, path: 1) (location: source ID 38, lines 107..111, bytes 3180..3333, hits: 0)
+- Line (location: source ID 38, lines 110..111, bytes 3303..3335, hits: 0)
+- Statement (location: source ID 38, lines 110..111, bytes 3303..3335, hits: 0)
 
