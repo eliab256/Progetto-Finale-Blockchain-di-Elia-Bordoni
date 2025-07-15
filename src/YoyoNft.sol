@@ -11,7 +11,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
  * @dev
  */
 
-contract YoyoNFT is ERC721 {
+contract YoyoNft is ERC721 {
     /* Errors */
     error YoyoNft__NotOwner();
     error YoyoNft__InvalidAddress();

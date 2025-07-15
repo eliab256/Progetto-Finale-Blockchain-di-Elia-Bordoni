@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {YoyoNFT} from "../src/YoyoNFT.sol";
+import {YoyoNft} from "../src/YoyoNft.sol";
 import {HelperConfig, CodeConstant} from "../script/HelperConfig.s.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 

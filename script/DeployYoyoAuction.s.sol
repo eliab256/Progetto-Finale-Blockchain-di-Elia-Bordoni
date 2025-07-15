@@ -12,7 +12,7 @@ contract YoyoAuctionScript is Script {
     function run() public {
         vm.startBroadcast();
 
-        yoyoAuction = new YoyoAuction();
+        //yoyoAuction = new YoyoAuction();
 
         vm.stopBroadcast();
     }

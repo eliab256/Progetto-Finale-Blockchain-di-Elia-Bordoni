@@ -8,6 +8,6 @@ contract YoyoAuctionTest is Test {
     YoyoAuction public yoyoAuction;
 
     function setUp() public {
-        yoyoAuction = new YoyoAuction();
+        //yoyoAuction = new YoyoAuction();
     }
 }
