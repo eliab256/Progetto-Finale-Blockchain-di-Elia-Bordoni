@@ -59,7 +59,8 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
 
     /* State variables */
     address private immutable i_owner;
-    uint256 private s_minimumBidChangeAmount = 0.005 ether;
+    uint256 private s_minimumBidChangeAmount =
+        i_yoyoNftContract.getBasicMintPrice() / 20; // 5% of the basic mint price
     uint256 private s_auctionDurationInHours = 24 hours;
     uint256 private s_auctionCounter;
     uint256 private s_dutchAuctionDropNumberOfIntervals = 48;
@@ -483,15 +484,6 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
             revert YoyoAuction__CannotChangeMintPriceDuringOpenAuction();
         }
         i_yoyoNftContract.setBasicMintPrice(_newPrice);
-    }
-
-    function changeMinimumBidChangeAmount(
-        uint256 _newIncrement
-    ) external onlyOwner {
-        if (_newIncrement <= 0) {
-            revert YoyoAuction__InvalidValue();
-        }
-        s_minimumBidChangeAmount = _newIncrement;
     }
 
     //Getter Functions
