@@ -1,0 +1,10 @@
+
+
+Uncovered for src/YoyoNFT.sol:
+- Branch (branch: 0, path: 0) (location: source ID 38, lines 64..67, bytes 1957..2008, hits: 0)
+- Line (location: source ID 38, lines 65..66, bytes 1971..1997, hits: 0)
+- Statement (location: source ID 38, lines 65..66, bytes 1971..1997, hits: 0)
+- Branch (branch: 5, path: 1) (location: source ID 38, lines 107..111, bytes 3180..3333, hits: 0)
+- Line (location: source ID 38, lines 110..111, bytes 3303..3335, hits: 0)
+- Statement (location: source ID 38, lines 110..111, bytes 3303..3335, hits: 0)
+
