@@ -3,12 +3,10 @@ pragma solidity ^0.8.0;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {YoyoNft} from "../src/YoyoNft.sol";
-import {HelperConfig, CodeConstant} from "../script/HelperConfig.s.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-contract YoyoNftTest is Test, CodeConstant {
+contract YoyoNftTest is Test {
     YoyoNft public yoyoNft;
-    HelperConfig public helperConfig;
 
     string public constant BASE_URI_EXAMPLE =
         "https://example.com/api/metadata/";

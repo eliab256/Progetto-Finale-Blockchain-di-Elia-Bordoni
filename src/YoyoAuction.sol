@@ -14,7 +14,7 @@ import {YoyoDutchAuctionLibrary} from "./YoyoDutchAuctionLibrary.sol";
  */
 
 contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
-    IYoyoNft private immutable i_yoyoNftContract;
+    IYoyoNft private yoyoNftContract;
 
     /* Errors */
     error YoyoAuction__NotOwner();
@@ -29,6 +29,9 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     error YoyoAuction__NoTokenToMint();
     error YoyoAuction__CannotChangeMintPriceDuringOpenAuction();
     error YoyoAuction__AuctionStillOpen();
+    error YoyoAuction__UpkeepNotNeeded();
+    error YoyoAuction__NftContractNotSet();
+    error YoyoAuction__NftContractAlreadySet();
 
     /* Type Declaration */
     enum AuctionState {
@@ -60,7 +63,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     /* State variables */
     address private immutable i_owner;
     uint256 private s_minimumBidChangeAmount =
-        i_yoyoNftContract.getBasicMintPrice() / 20; // 5% of the basic mint price
+        yoyoNftContract.getBasicMintPrice() / 20; // 5% of the basic mint price
     uint256 private s_auctionDurationInHours = 24 hours;
     uint256 private s_auctionCounter;
     uint256 private s_dutchAuctionDropNumberOfIntervals = 48;
@@ -80,7 +83,6 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         uint256 bidAmount,
         uint256 indexed auctionId
     );
-
     event YoyoAuction__AuctionOpened(
         uint256 indexed auctionId,
         uint256 indexed tokenId,
@@ -128,14 +130,16 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     }
 
     /* Constructor */
-    constructor(address _yoyoNftAddress) {
-        if (_yoyoNftAddress == address(0)) {
-            revert YoyoAuction__InvalidAddress();
-        }
-
+    constructor() {
         i_owner = msg.sender;
-        i_yoyoNftContract = IYoyoNft(_yoyoNftAddress);
         s_auctionCounter = 0;
+    }
+
+    function setNftContract(address _yoyoNftAddress) external onlyOwner {
+        if (_yoyoNftAddress != address(0)) {
+            revert YoyoAuction__NftContractAlreadySet();
+        }
+        yoyoNftContract = IYoyoNft(_yoyoNftAddress);
     }
 
     /* Functions */
@@ -160,6 +164,10 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     }
 
     function performUpkeep(bytes calldata performData) external override {
+        (bool upkeepNeeded, ) = checkUpkeep(performData);
+        if (!upkeepNeeded) {
+            revert YoyoAuction__UpkeepNotNeeded();
+        }
         uint256 auctionId = abi.decode(performData, (uint256));
 
         AuctionStruct memory auction = s_auctionsFromAuctionId[auctionId];
@@ -176,7 +184,10 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         uint256 _tokenId,
         AuctionType _auctionType
     ) public onlyOwner {
-        if (i_yoyoNftContract.getIfTokenIdIsMintable(_tokenId) == false) {
+        if (address(yoyoNftContract) != address(0)) {
+            revert YoyoAuction__NftContractNotSet();
+        }
+        if (yoyoNftContract.getIfTokenIdIsMintable(_tokenId) == false) {
             revert YoyoAuction__InvalidTokenId();
         }
 
@@ -187,7 +198,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
             revert YoyoAuction__AuctionStillOpen();
         }
 
-        uint256 newAuctionId = s_auctionCounter++;
+        uint256 newAuctionId = ++s_auctionCounter;
         uint256 endTime = block.timestamp +
             (s_auctionDurationInHours * 1 hours);
 
@@ -219,7 +230,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         uint256 _auctionId,
         uint256 _endTime
     ) private view returns (AuctionStruct memory) {
-        uint256 startPrice = i_yoyoNftContract.getBasicMintPrice();
+        uint256 startPrice = yoyoNftContract.getBasicMintPrice();
 
         AuctionStruct memory newAuction = AuctionStruct({
             auctionId: _auctionId,
@@ -243,11 +254,11 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         uint256 _auctionId,
         uint256 _endTime
     ) private view returns (AuctionStruct memory) {
-        uint256 startPrice = i_yoyoNftContract.getBasicMintPrice() *
+        uint256 startPrice = yoyoNftContract.getBasicMintPrice() *
             s_dutchAuctionStartPriceMultiplier;
         uint256 dropAmount = YoyoDutchAuctionLibrary
             .dropAmountFromPricesAndIntervalsCalculator(
-                i_yoyoNftContract.getBasicMintPrice(),
+                yoyoNftContract.getBasicMintPrice(),
                 startPrice,
                 s_dutchAuctionDropNumberOfIntervals
             );
@@ -270,7 +281,9 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     }
 
     // Function to place a bid on an auction
-    function placeBidOnAuction(uint256 _auctionId) external payable {
+    function placeBidOnAuction(
+        uint256 _auctionId
+    ) external payable nonReentrant {
         AuctionStruct memory auction = s_auctionsFromAuctionId[_auctionId];
         if (auction.startTime == 0) {
             revert YoyoAuction__AuctionDoesNotExist();
@@ -301,12 +314,16 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     ) private {
         AuctionStruct storage auction = s_auctionsFromAuctionId[_auctionId];
 
-        if (msg.value < auction.higherBid) {
+        uint256 currentPrice = getCurrentAuctionPrice();
+
+        if (msg.value < currentPrice) {
             revert YoyoAuction__BidTooLow();
         }
         // Update the auction with the new bid
         auction.higherBidder = _sender;
         auction.higherBid = msg.value;
+
+        closeAuction(auction.auctionId);
     }
 
     function placeBidOnEnglishAuction(
@@ -328,8 +345,6 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         // Update the auction with the new bid
         auction.higherBidder = _sender;
         auction.higherBid = msg.value;
-
-        closeAuction(auction.auctionId);
     }
 
     function refundPreviousBidder(
@@ -367,7 +382,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
             auction.higherBid
         );
 
-        try i_yoyoNftContract.mintNft(auction.higherBidder, auction.tokenId) {
+        try yoyoNftContract.mintNft(auction.higherBidder, auction.tokenId) {
             auction.state = AuctionState.FINALIZED;
             auction.nftOwner = auction.higherBidder;
 
@@ -398,11 +413,11 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
 
         uint256 startPrice;
         if (auction.auctionType == AuctionType.ENGLISH) {
-            startPrice = i_yoyoNftContract.getBasicMintPrice();
+            startPrice = yoyoNftContract.getBasicMintPrice();
         } else if (auction.auctionType == AuctionType.DUTCH) {
             startPrice = YoyoDutchAuctionLibrary
                 .startPriceFromReserveAndMultiplierCalculator(
-                    i_yoyoNftContract.getBasicMintPrice(),
+                    yoyoNftContract.getBasicMintPrice(),
                     s_dutchAuctionStartPriceMultiplier,
                     1 // Using 1 interval for restart
                 );
@@ -429,6 +444,9 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     }
 
     function manualMintForWinner(uint256 _auctionId) public onlyOwner {
+        if (address(yoyoNftContract) != address(0)) {
+            revert YoyoAuction__NftContractNotSet();
+        }
         AuctionStruct storage auction = s_auctionsFromAuctionId[_auctionId];
 
         if (auction.nftOwner != address(0)) {
@@ -438,7 +456,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
             revert YoyoAuction__NoTokenToMint();
         }
 
-        try i_yoyoNftContract.mintNft(auction.higherBidder, auction.tokenId) {
+        try yoyoNftContract.mintNft(auction.higherBidder, auction.tokenId) {
             auction.state = AuctionState.FINALIZED;
             auction.nftOwner = auction.higherBidder;
 
@@ -466,6 +484,12 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
 
     // Functions to change auction parameters
     function changeMintPrice(uint256 _newPrice) public onlyOwner {
+        if (address(yoyoNftContract) != address(0)) {
+            revert YoyoAuction__NftContractNotSet();
+        }
+        if (_newPrice == 0) {
+            revert YoyoAuction__InvalidValue();
+        }
         AuctionStruct memory currentAuction = s_auctionsFromAuctionId[
             s_auctionCounter
         ];
@@ -483,7 +507,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         ) {
             revert YoyoAuction__CannotChangeMintPriceDuringOpenAuction();
         }
-        i_yoyoNftContract.setBasicMintPrice(_newPrice);
+        yoyoNftContract.setBasicMintPrice(_newPrice);
     }
 
     //Getter Functions
@@ -492,7 +516,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     }
 
     function getNftContract() external view returns (address) {
-        return address(i_yoyoNftContract);
+        return address(yoyoNftContract);
     }
 
     function getAuctionFromAuctionId(
@@ -518,14 +542,14 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         if (auction.auctionType == AuctionType.DUTCH) {
             uint256 dropAmount = YoyoDutchAuctionLibrary
                 .dropAmountFromPricesAndIntervalsCalculator(
-                    i_yoyoNftContract.getBasicMintPrice(),
+                    yoyoNftContract.getBasicMintPrice(),
                     auction.startPrice,
                     s_dutchAuctionDropNumberOfIntervals
                 );
             return
                 YoyoDutchAuctionLibrary.currentPriceFromTimeRangeCalculator(
                     auction.startPrice,
-                    i_yoyoNftContract.getBasicMintPrice(),
+                    yoyoNftContract.getBasicMintPrice(),
                     dropAmount,
                     auction.startTime,
                     auction.endTime,

@@ -11,6 +11,12 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
  * @dev
  */
 
+/* Type declarations */
+struct ConstructorParams {
+    string baseURI;
+    address auctionContract;
+}
+
 contract YoyoNft is ERC721 {
     /* Errors */
     error YoyoNft__NotOwner();
@@ -27,12 +33,6 @@ contract YoyoNft is ERC721 {
     error YoyoNft__ThisContractDoesntAcceptDeposit();
     error YoyoNft__CallValidFunctionToInteractWithContract();
     error YoyoNft__NotAuctionContract();
-
-    /* Type declarations */
-    struct ConstructorParams {
-        string baseURI;
-        address auctionContract;
-    }
 
     /* State variables */
     uint256 private s_tokenCounter;
