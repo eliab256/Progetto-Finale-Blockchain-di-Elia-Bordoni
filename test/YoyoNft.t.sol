@@ -10,6 +10,7 @@ contract YoyoNftTest is Test {
 
     string public constant BASE_URI_EXAMPLE =
         "https://example.com/api/metadata/";
+    uint256 public constant BASIC_MINT_PRICE = 0.01 ether;
 
     //Test Partecipants
     address public deployer;
@@ -30,7 +31,8 @@ contract YoyoNftTest is Test {
 
         ConstructorParams memory params = ConstructorParams({
             baseURI: BASE_URI_EXAMPLE,
-            auctionContract: address(AUCTION_CONTRACT)
+            auctionContract: address(AUCTION_CONTRACT),
+            basicMintPrice: BASIC_MINT_PRICE
         });
 
         vm.startPrank(deployer);
@@ -76,7 +78,8 @@ contract YoyoNftTest is Test {
     function testIfDeployRevertDueToZeroBaseURI() public {
         ConstructorParams memory params = ConstructorParams({
             baseURI: "",
-            auctionContract: AUCTION_CONTRACT
+            auctionContract: AUCTION_CONTRACT,
+            basicMintPrice: BASIC_MINT_PRICE
         });
         vm.expectRevert(YoyoNft.YoyoNft__ValueCantBeZero.selector);
         new YoyoNft(params);
@@ -85,7 +88,8 @@ contract YoyoNftTest is Test {
     function testIfDeployRevertDueToInvalidAuctionContract() public {
         ConstructorParams memory params = ConstructorParams({
             baseURI: BASE_URI_EXAMPLE,
-            auctionContract: address(0)
+            auctionContract: address(0),
+            basicMintPrice: BASIC_MINT_PRICE
         });
         vm.expectRevert(YoyoNft.YoyoNft__InvalidAddress.selector);
         new YoyoNft(params);

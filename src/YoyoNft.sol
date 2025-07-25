@@ -15,6 +15,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 struct ConstructorParams {
     string baseURI;
     address auctionContract;
+    uint256 basicMintPrice;
 }
 
 contract YoyoNft is ERC721 {
@@ -37,7 +38,7 @@ contract YoyoNft is ERC721 {
     /* State variables */
     uint256 private s_tokenCounter;
     uint256 public constant MAX_NFT_SUPPLY = 20;
-    uint256 private s_basicMintPrice = 0.01 ether;
+    uint256 private s_basicMintPrice;
     string private s_baseURI;
     address private immutable i_owner;
     address private immutable i_auctionContract;
@@ -88,6 +89,7 @@ contract YoyoNft is ERC721 {
         s_baseURI = _params.baseURI;
         s_tokenCounter = 0;
         i_auctionContract = _params.auctionContract;
+        s_basicMintPrice = _params.basicMintPrice;
     }
 
     receive() external payable {

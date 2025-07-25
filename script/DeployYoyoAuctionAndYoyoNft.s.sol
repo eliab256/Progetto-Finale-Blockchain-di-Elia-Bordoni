@@ -6,12 +6,8 @@ import {YoyoAuction} from "../src/YoyoAuction.sol";
 import {YoyoNft, ConstructorParams} from "../src/YoyoNft.sol";
 
 contract DeployYoyoAuctionAndYoyoNft is Script {
-    struct DeployYoyoNftParams {
-        string baseURI;
-        address auctionContract;
-    }
-
     string public constant BASE_URI = "https://example.com/api/metadata/";
+    uint256 public constant BASIC_MINT_PRICE = 0.01 ether;
 
     function run() public returns (YoyoAuction, YoyoNft) {
         vm.startBroadcast();
@@ -23,7 +19,8 @@ contract DeployYoyoAuctionAndYoyoNft is Script {
         // 2. Create constructor params
         ConstructorParams memory params = ConstructorParams({
             baseURI: BASE_URI,
-            auctionContract: address(yoyoAuction)
+            auctionContract: address(yoyoAuction),
+            basicMintPrice: BASIC_MINT_PRICE
         });
 
         // 3. Deploy the NFT contract

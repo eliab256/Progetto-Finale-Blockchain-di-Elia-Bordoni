@@ -37,4 +37,16 @@ contract YoyoAuctionTest is Test {
         vm.deal(USER_2, STARTING_BALANCE_USER_2);
         vm.deal(USER_NO_BALANCE, STARTING_BALANCE_USER_NO_BALANCE);
     }
+
+    // function testIfDeployAuctionContractAssignOwnerAndAuctionCounter() public {
+    //     assertEq(yoyoAuction.getContractOwner(), deployer);
+    //     assertEq(yoyoAuction.getAuctionCounter(), 0);
+    // }
+
+    function testIfDeployNftContractAssignOwnerAndAuctionContract() public {
+        assertEq(yoyoNft.getContractOwner(), deployer);
+        assertEq(yoyoAuction.getContractOwner(), deployer);
+        assertEq(yoyoNft.getAuctionContract(), address(yoyoAuction));
+        assertEq(yoyoAuction.getNftContract(), address(yoyoNft));
+    }
 }

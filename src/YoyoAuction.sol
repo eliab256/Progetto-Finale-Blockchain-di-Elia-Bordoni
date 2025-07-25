@@ -19,6 +19,8 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     /* Errors */
     error YoyoAuction__NotOwner();
     error YoyoAuction__InvalidAddress();
+    error YoyoAuction__ThisContractDoesntAcceptDeposit();
+    error YoyoAuction__CallValidFunctionToInteractWithContract();
     error YoyoAuction__InvalidTokenId();
     error YoyoAuction__InvalidValue();
     error YoyoAuction__InvalidAuctionType();
@@ -62,8 +64,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
 
     /* State variables */
     address private immutable i_owner;
-    uint256 private s_minimumBidChangeAmount =
-        yoyoNftContract.getBasicMintPrice() / 20; // 5% of the basic mint price
+    uint256 private s_minimumBidChangeAmount;
     uint256 private s_auctionDurationInHours = 24 hours;
     uint256 private s_auctionCounter;
     uint256 private s_dutchAuctionDropNumberOfIntervals = 48;
@@ -136,10 +137,19 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     }
 
     function setNftContract(address _yoyoNftAddress) external onlyOwner {
-        if (_yoyoNftAddress != address(0)) {
+        if (yoyoNftContract != IYoyoNft(address(0))) {
             revert YoyoAuction__NftContractAlreadySet();
         }
         yoyoNftContract = IYoyoNft(_yoyoNftAddress);
+        s_minimumBidChangeAmount = yoyoNftContract.getBasicMintPrice() / 40; // 2,5% of the basic mint price
+    }
+
+    receive() external payable {
+        revert YoyoAuction__ThisContractDoesntAcceptDeposit();
+    }
+
+    fallback() external payable {
+        revert YoyoAuction__CallValidFunctionToInteractWithContract();
     }
 
     /* Functions */
@@ -517,6 +527,10 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
 
     function getNftContract() external view returns (address) {
         return address(yoyoNftContract);
+    }
+
+    function getAuctionCounter() external view returns (uint256) {
+        return s_auctionCounter;
     }
 
     function getAuctionFromAuctionId(
