@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {YoyoNft} from "../src/YoyoNft.sol";
+import {YoyoNft, ConstructorParams} from "../src/YoyoNft.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract YoyoNftTest is Test {
@@ -28,13 +28,13 @@ contract YoyoNftTest is Test {
     function setUp() public {
         deployer = msg.sender;
 
+        ConstructorParams memory params = ConstructorParams({
+            baseURI: BASE_URI_EXAMPLE,
+            auctionContract: address(AUCTION_CONTRACT)
+        });
+
         vm.startPrank(deployer);
-        yoyoNft = new YoyoNft(
-            YoyoNft.ConstructorParams({
-                baseURI: BASE_URI_EXAMPLE,
-                auctionContract: address(AUCTION_CONTRACT)
-            })
-        );
+        yoyoNft = new YoyoNft(params);
 
         //Set up balances for each address
         vm.deal(deployer, STARTING_BALANCE_DEPLOYER);
@@ -74,23 +74,21 @@ contract YoyoNftTest is Test {
     }
 
     function testIfDeployRevertDueToZeroBaseURI() public {
+        ConstructorParams memory params = ConstructorParams({
+            baseURI: "",
+            auctionContract: AUCTION_CONTRACT
+        });
         vm.expectRevert(YoyoNft.YoyoNft__ValueCantBeZero.selector);
-        new YoyoNft(
-            YoyoNft.ConstructorParams({
-                baseURI: "",
-                auctionContract: AUCTION_CONTRACT
-            })
-        );
+        new YoyoNft(params);
     }
 
     function testIfDeployRevertDueToInvalidAuctionContract() public {
+        ConstructorParams memory params = ConstructorParams({
+            baseURI: BASE_URI_EXAMPLE,
+            auctionContract: address(0)
+        });
         vm.expectRevert(YoyoNft.YoyoNft__InvalidAddress.selector);
-        new YoyoNft(
-            YoyoNft.ConstructorParams({
-                baseURI: BASE_URI_EXAMPLE,
-                auctionContract: address(0)
-            })
-        );
+        new YoyoNft(params);
     }
 
     /*//////////////////////////////////////////////////////////////

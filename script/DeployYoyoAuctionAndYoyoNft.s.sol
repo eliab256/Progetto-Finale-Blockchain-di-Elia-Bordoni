@@ -5,7 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {YoyoAuction} from "../src/YoyoAuction.sol";
 import {YoyoNft, ConstructorParams} from "../src/YoyoNft.sol";
 
-contract YoyoAuctionScript is Script {
+contract DeployYoyoAuctionAndYoyoNft is Script {
     struct DeployYoyoNftParams {
         string baseURI;
         address auctionContract;
@@ -13,9 +13,7 @@ contract YoyoAuctionScript is Script {
 
     string public constant BASE_URI = "https://example.com/api/metadata/";
 
-    function setUp() public {}
-
-    function run() public {
+    function run() public returns (YoyoAuction, YoyoNft) {
         vm.startBroadcast();
 
         // 1. Deploy YoyoAuction contract
@@ -40,5 +38,7 @@ contract YoyoAuctionScript is Script {
         );
 
         vm.stopBroadcast();
+
+        return (yoyoAuction, yoyoNft);
     }
 }
