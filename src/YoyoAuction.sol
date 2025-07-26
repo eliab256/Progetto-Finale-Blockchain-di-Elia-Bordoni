@@ -194,7 +194,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         uint256 _tokenId,
         AuctionType _auctionType
     ) public onlyOwner {
-        if (address(yoyoNftContract) != address(0)) {
+        if (address(yoyoNftContract) == address(0)) {
             revert YoyoAuction__NftContractNotSet();
         }
         if (yoyoNftContract.getIfTokenIdIsMintable(_tokenId) == false) {
@@ -531,6 +531,10 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
 
     function getAuctionCounter() external view returns (uint256) {
         return s_auctionCounter;
+    }
+
+    function getAuctionDurationInHours() external view returns (uint256) {
+        return s_auctionDurationInHours;
     }
 
     function getAuctionFromAuctionId(

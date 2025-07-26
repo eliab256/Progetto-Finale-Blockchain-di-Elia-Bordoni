@@ -38,15 +38,94 @@ contract YoyoAuctionTest is Test {
         vm.deal(USER_NO_BALANCE, STARTING_BALANCE_USER_NO_BALANCE);
     }
 
-    // function testIfDeployAuctionContractAssignOwnerAndAuctionCounter() public {
-    //     assertEq(yoyoAuction.getContractOwner(), deployer);
-    //     assertEq(yoyoAuction.getAuctionCounter(), 0);
-    // }
+    function testIfDeployAuctionContractAssignOwnerAndAuctionCounter() public {
+        assertEq(yoyoAuction.getContractOwner(), deployer);
+        assertEq(yoyoAuction.getAuctionCounter(), 0);
+    }
 
     function testIfDeployNftContractAssignOwnerAndAuctionContract() public {
         assertEq(yoyoNft.getContractOwner(), deployer);
         assertEq(yoyoAuction.getContractOwner(), deployer);
         assertEq(yoyoNft.getAuctionContract(), address(yoyoAuction));
         assertEq(yoyoAuction.getNftContract(), address(yoyoNft));
+    }
+
+    function testIfReceiveFunctionReverts() public {
+        vm.expectRevert(
+            YoyoAuction.YoyoAuction__ThisContractDoesntAcceptDeposit.selector
+        );
+        address(yoyoNft).call{value: 1 ether}("");
+    }
+
+    function testIfFallbackFunctionReverts() public {
+        vm.expectRevert(
+            YoyoAuction
+                .YoyoAuction__CallValidFunctionToInteractWithContract
+                .selector
+        );
+        address(yoyoNft).call{value: 1 ether}("metadata");
+    }
+
+    function testIfOpenNewAuctionRevertsIfNotOwner() public {
+        uint256 tokenId = 1;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.ENGLISH;
+        vm.startPrank(USER_1);
+        vm.expectRevert(YoyoAuction.YoyoAuction__NotOwner.selector);
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+        vm.stopPrank();
+    }
+
+    function testIfOpenNewAuctionRevertDueToNftContractNotSet() public {
+        uint256 tokenId = 1;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.ENGLISH;
+        vm.startPrank(deployer);
+        YoyoAuction yoyoAuctionWithoutNft = new YoyoAuction();
+
+        vm.expectRevert(YoyoAuction.YoyoAuction__NftContractNotSet.selector);
+        yoyoAuctionWithoutNft.openNewAuction(tokenId, auctionType);
+        vm.stopPrank();
+    }
+
+    function testIfOpenNewAuctionWorks() public {
+        uint256 tokenId = 1;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.ENGLISH;
+        uint256 startPrice = yoyoNft.getBasicMintPrice();
+        uint256 auctionDuration = yoyoAuction.getAuctionDurationInHours() *
+            1 hours;
+
+        uint256 initialAuctionCounter = yoyoAuction.getAuctionCounter();
+
+        uint256 fakeTimestamp = block.timestamp + 1 days;
+        vm.warp(fakeTimestamp);
+
+        vm.startPrank(deployer);
+        vm.expectEmit(true, true, false, false);
+        emit YoyoAuction.YoyoAuction__AuctionOpened(
+            initialAuctionCounter + 1,
+            tokenId,
+            auctionType,
+            startPrice,
+            fakeTimestamp,
+            fakeTimestamp + auctionDuration,
+            startPrice / 20
+        );
+
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+        vm.stopPrank();
+
+        assertEq(yoyoAuction.getAuctionCounter(), initialAuctionCounter + 1);
+        assertEq(yoyoAuction.getAuctionFromAuctionId(1).tokenId, tokenId);
+        assertTrue(
+            yoyoAuction.getAuctionFromAuctionId(1).auctionType ==
+                YoyoAuction.AuctionType.ENGLISH
+        );
+        assertEq(
+            yoyoAuction.getAuctionFromAuctionId(1).startTime,
+            fakeTimestamp
+        );
+        assertEq(
+            yoyoAuction.getAuctionFromAuctionId(1).endTime,
+            fakeTimestamp + auctionDuration
+        );
     }
 }
