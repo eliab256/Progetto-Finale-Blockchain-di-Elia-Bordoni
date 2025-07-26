@@ -630,6 +630,49 @@ contract YoyoAuctionTest is Test {
         vm.stopPrank();
     }
 
+    //Test Close Auction Function
+    function testIfCloseAuctionWorksWithDutchAuctionAndMintNft() public {
+        uint256 tokenId = 1;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
+
+        //Open New Dutch Auction
+
+        vm.startPrank(deployer);
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+        uint256 startTime = block.timestamp;
+        vm.stopPrank();
+
+        vm.roll(block.number + 1);
+        vm.warp(yoyoAuction.getAuctionFromAuctionId(1).endTime - 4 hours);
+        uint256 newBidPlaced = yoyoAuction.getCurrentAuctionPrice();
+
+        //Place a bid on the auction
+        vm.startPrank(USER_1);
+        vm.expectEmit(true, true, true, true);
+        emit YoyoAuction.YoyoAuction__AuctionClosed(
+            1,
+            tokenId,
+            newBidPlaced,
+            startTime,
+            block.timestamp,
+            USER_1,
+            newBidPlaced
+        );
+        vm.expectEmit(true, true, true, false);
+        emit YoyoAuction.YoyoAuction__AuctionFinalized(1, tokenId, USER_1);
+        yoyoAuction.placeBidOnAuction{value: newBidPlaced}(1);
+        vm.stopPrank();
+
+        vm.roll(block.number + 1);
+
+        assertTrue(
+            yoyoAuction.getAuctionFromAuctionId(1).state ==
+                YoyoAuction.AuctionState.FINALIZED
+        );
+        assertEq(yoyoAuction.getAuctionFromAuctionId(1).nftOwner, USER_1);
+        assertEq(yoyoNft.ownerOf(tokenId), USER_1);
+    }
+
     //Test Change Mint Price
     function testIfChangeMintPriceRevertsIfNotOwner() public {
         uint256 newPrice = 0.1 ether;

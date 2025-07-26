@@ -381,7 +381,9 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         if (auction.state == AuctionState.OPEN) {
             auction.state = AuctionState.CLOSED;
         }
-
+        if (auction.auctionType == AuctionType.DUTCH) {
+            auction.endTime = block.timestamp; // Set end time to current time for Dutch auction
+        }
         emit YoyoAuction__AuctionClosed(
             auction.auctionId,
             auction.tokenId,
