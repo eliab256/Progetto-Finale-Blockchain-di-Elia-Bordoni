@@ -6,6 +6,7 @@ import {YoyoAuction} from "../src/YoyoAuction.sol";
 import {YoyoNft} from "../src/YoyoNft.sol";
 import {DeployYoyoAuctionAndYoyoNft} from "../script/DeployYoyoAuctionAndYoyoNft.s.sol";
 
+//Il mock serve per testare i casi in cui si prova a inserire valori non validi dentro le enum
 contract YoyoAuctionTest is Test {
     YoyoAuction public yoyoAuction;
     YoyoNft public yoyoNft;
@@ -66,6 +67,7 @@ contract YoyoAuctionTest is Test {
         vm.stopPrank();
     }
 
+    //test fsllbsck and receive functions
     function testIfReceiveFunctionReverts() public {
         vm.expectRevert(
             YoyoAuction.YoyoAuction__ThisContractDoesntAcceptDeposit.selector
@@ -80,6 +82,168 @@ contract YoyoAuctionTest is Test {
                 .selector
         );
         address(yoyoNft).call{value: 1 ether}("metadata");
+    }
+
+    //Test checkUpkeep
+    function testPerformeUpkeepCanOnlyRunIfCheckUpkeepReturnsTrue() public {
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(1, YoyoAuction.AuctionType.ENGLISH);
+
+        uint256 endTime = yoyoAuction.getAuctionFromAuctionId(1).endTime;
+        uint256 auctionId = yoyoAuction.getAuctionFromAuctionId(1).auctionId;
+        bytes memory performDataTest = abi.encode(auctionId);
+
+        (bool upkeepNeeded, bytes memory performData) = yoyoAuction.checkUpkeep(
+            ""
+        );
+        assertFalse(upkeepNeeded);
+        assertEq(performDataTest, performData);
+
+        vm.roll(block.number + 1);
+        vm.warp(endTime);
+
+        (upkeepNeeded, ) = yoyoAuction.checkUpkeep("");
+        assertTrue(upkeepNeeded);
+        assertEq(performDataTest, performData);
+    }
+
+    function testIfPerformUpkeepRevertsIfUpkeepNeededIsFalse() public {
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(1, YoyoAuction.AuctionType.ENGLISH);
+
+        uint256 auctionId = yoyoAuction.getAuctionFromAuctionId(1).auctionId;
+        bytes memory performDataTest = abi.encode(auctionId);
+
+        vm.expectRevert(YoyoAuction.YoyoAuction__UpkeepNotNeeded.selector);
+        yoyoAuction.performUpkeep(performDataTest);
+    }
+
+    function testIfPerformUpkeepCallCloseAuctionIfBidderIsNotZeroAddress()
+        public
+    {
+        //Open New Auction
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(1, YoyoAuction.AuctionType.ENGLISH);
+
+        uint256 endTime = yoyoAuction.getAuctionFromAuctionId(1).endTime;
+        uint256 auctionId = yoyoAuction.getAuctionFromAuctionId(1).auctionId;
+        uint256 tokenId = yoyoAuction.getAuctionFromAuctionId(1).tokenId;
+        uint256 startPrice = yoyoAuction.getAuctionFromAuctionId(1).startPrice;
+        uint256 startTime = yoyoAuction.getAuctionFromAuctionId(1).startTime;
+        bytes memory performDataTest = abi.encode(auctionId);
+        uint256 bidAmount = yoyoAuction.getAuctionFromAuctionId(1).higherBid +
+            yoyoAuction.getMinimumBidChangeAmount();
+
+        vm.roll(block.number + 1);
+        vm.warp(endTime - 1 hours);
+
+        //Place a Bid
+        vm.startPrank(USER_1);
+        yoyoAuction.placeBidOnAuction{value: bidAmount}(1);
+        vm.stopPrank();
+
+        vm.roll(block.number + 1);
+        vm.warp(endTime);
+
+        vm.expectEmit(true, true, false, false);
+        emit YoyoAuction.YoyoAuction__AuctionClosed(
+            auctionId,
+            tokenId,
+            startPrice,
+            startTime,
+            endTime,
+            USER_1,
+            bidAmount
+        );
+
+        yoyoAuction.performUpkeep(performDataTest);
+
+        assertTrue(
+            yoyoAuction.getAuctionFromAuctionId(1).state ==
+                YoyoAuction.AuctionState.CLOSED
+        );
+    }
+
+    function testIfPerformUpkeepCallRestartEnglishAuctionCorrectlyIfBidderIsZeroAddress()
+        public
+    {
+        //Open New Auction
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(1, YoyoAuction.AuctionType.ENGLISH);
+
+        uint256 endTime = yoyoAuction.getAuctionFromAuctionId(1).endTime;
+        uint256 auctionId = yoyoAuction.getAuctionFromAuctionId(1).auctionId;
+        uint256 tokenId = yoyoAuction.getAuctionFromAuctionId(1).tokenId;
+        uint256 startPrice = yoyoAuction.getAuctionFromAuctionId(1).startPrice;
+        uint256 oldStartTime = yoyoAuction.getAuctionFromAuctionId(1).startTime;
+        bytes memory performDataTest = abi.encode(auctionId);
+
+        vm.roll(block.number + 1);
+        vm.warp(endTime);
+
+        uint256 newStartTime = block.timestamp;
+        uint256 newEndTime = newStartTime +
+            yoyoAuction.getAuctionDurationInHours() *
+            1 hours;
+
+        vm.expectEmit(true, true, false, false);
+        emit YoyoAuction.YoyoAuction__AuctionRestarted(
+            auctionId,
+            tokenId,
+            newStartTime,
+            startPrice,
+            newEndTime,
+            yoyoAuction.getMinimumBidChangeAmount()
+        );
+
+        yoyoAuction.performUpkeep(performDataTest);
+
+        assertTrue(
+            yoyoAuction.getAuctionFromAuctionId(1).state ==
+                YoyoAuction.AuctionState.OPEN
+        );
+        assertTrue(oldStartTime < newStartTime);
+    }
+
+    function testIfPerformUpkeepCallRestartDutchAuctionCorrectlyIfBidderIsZeroAddress()
+        public
+    {
+        //Open New Auction
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(1, YoyoAuction.AuctionType.DUTCH);
+
+        uint256 endTime = yoyoAuction.getAuctionFromAuctionId(1).endTime;
+        uint256 auctionId = yoyoAuction.getAuctionFromAuctionId(1).auctionId;
+        uint256 tokenId = yoyoAuction.getAuctionFromAuctionId(1).tokenId;
+        uint256 startPrice = yoyoAuction.getAuctionFromAuctionId(1).startPrice;
+        uint256 oldStartTime = yoyoAuction.getAuctionFromAuctionId(1).startTime;
+        bytes memory performDataTest = abi.encode(auctionId);
+
+        vm.roll(block.number + 1);
+        vm.warp(endTime);
+
+        uint256 newStartTime = block.timestamp;
+        uint256 newEndTime = newStartTime +
+            yoyoAuction.getAuctionDurationInHours() *
+            1 hours;
+
+        vm.expectEmit(true, true, false, false);
+        emit YoyoAuction.YoyoAuction__AuctionRestarted(
+            auctionId,
+            tokenId,
+            newStartTime,
+            startPrice,
+            newEndTime,
+            yoyoAuction.getMinimumBidChangeAmount()
+        );
+
+        yoyoAuction.performUpkeep(performDataTest);
+
+        assertTrue(
+            yoyoAuction.getAuctionFromAuctionId(1).state ==
+                YoyoAuction.AuctionState.OPEN
+        );
+        assertTrue(oldStartTime < newStartTime);
     }
 
     //Test Open New Auction
@@ -303,7 +467,7 @@ contract YoyoAuctionTest is Test {
         vm.stopPrank();
     }
 
-    function testIfPlaceBidOnAuctionPlaceBidOnEnglishAuction() public {
+    function testIfPlaceBidOnAuctionPlaceBidOnEnglishAuctionWorks() public {
         uint256 tokenId = 1;
         YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.ENGLISH;
         uint256 newBidPlaced = yoyoNft.getBasicMintPrice() +
@@ -489,6 +653,26 @@ contract YoyoAuctionTest is Test {
         uint256 newPrice = 0;
         vm.startPrank(deployer);
         vm.expectRevert(YoyoAuction.YoyoAuction__InvalidValue.selector);
+        yoyoAuction.changeMintPrice(newPrice);
+        vm.stopPrank();
+    }
+
+    function testIfChangeMintPriceRevertsWhileCurrentAuctionIsOpen() public {
+        uint256 tokenId = 1;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.ENGLISH;
+        uint256 newPrice = 0.1 ether;
+
+        //Open New English Auction
+        vm.startPrank(deployer);
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+        vm.stopPrank();
+
+        vm.startPrank(deployer);
+        vm.expectRevert(
+            YoyoAuction
+                .YoyoAuction__CannotChangeMintPriceDuringOpenAuction
+                .selector
+        );
         yoyoAuction.changeMintPrice(newPrice);
         vm.stopPrank();
     }

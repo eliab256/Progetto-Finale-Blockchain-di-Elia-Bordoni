@@ -70,7 +70,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     uint256 private s_dutchAuctionDropNumberOfIntervals = 48;
     uint256 private s_dutchAuctionStartPriceMultiplier = 13;
 
-    mapping(uint256 => AuctionStruct) private s_auctionsFromAuctionId;
+    mapping(uint256 => AuctionStruct) internal s_auctionsFromAuctionId;
 
     /* Events */
     event YoyoAuction__BidPlaced(
@@ -164,11 +164,11 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         AuctionStruct memory auction = s_auctionsFromAuctionId[
             s_auctionCounter
         ];
-
+        bool auctionOpen = auction.state == AuctionState.OPEN;
         bool auctionEnded = block.timestamp >= auction.endTime;
         uint256 auctionId = auction.auctionId;
 
-        upkeepNeeded = auctionEnded;
+        upkeepNeeded = (auctionEnded && auctionOpen);
         performData = abi.encode(auctionId);
         return (upkeepNeeded, performData);
     }
@@ -305,8 +305,6 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
             placeBidOnDutchAuction(_auctionId, msg.sender);
         } else if (auction.auctionType == AuctionType.ENGLISH) {
             placeBidOnEnglishAuction(_auctionId, msg.sender);
-        } else {
-            revert YoyoAuction__InvalidAuctionType();
         }
 
         // Emit an event for the new bid
@@ -433,8 +431,6 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
                     s_dutchAuctionStartPriceMultiplier,
                     1 // Using 1 interval for restart
                 );
-        } else {
-            revert YoyoAuction__InvalidAuctionType();
         }
         uint256 endTime = block.timestamp +
             (s_auctionDurationInHours * 1 hours);
