@@ -72,7 +72,7 @@ contract YoyoAuctionTest is Test {
         vm.expectRevert(
             YoyoAuction.YoyoAuction__ThisContractDoesntAcceptDeposit.selector
         );
-        address(yoyoNft).call{value: 1 ether}("");
+        address(yoyoAuction).call{value: 1 ether}("");
     }
 
     function testIfFallbackFunctionReverts() public {
@@ -81,7 +81,7 @@ contract YoyoAuctionTest is Test {
                 .YoyoAuction__CallValidFunctionToInteractWithContract
                 .selector
         );
-        address(yoyoNft).call{value: 1 ether}("metadata");
+        address(yoyoAuction).call{value: 1 ether}("metadata");
     }
 
     //Test checkUpkeep
@@ -160,7 +160,7 @@ contract YoyoAuctionTest is Test {
 
         assertTrue(
             yoyoAuction.getAuctionFromAuctionId(1).state ==
-                YoyoAuction.AuctionState.CLOSED
+                YoyoAuction.AuctionState.FINALIZED
         );
     }
 
@@ -608,7 +608,7 @@ contract YoyoAuctionTest is Test {
         //if auction is Dutch, should close after a bid is placed
         assertTrue(
             yoyoAuction.getAuctionFromAuctionId(1).state ==
-                YoyoAuction.AuctionState.CLOSED
+                YoyoAuction.AuctionState.FINALIZED
         );
     }
 
@@ -632,7 +632,7 @@ contract YoyoAuctionTest is Test {
 
     //Test Close Auction Function
     function testIfCloseAuctionWorksWithDutchAuctionAndMintNft() public {
-        uint256 tokenId = 1;
+        uint256 tokenId = 5;
         YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
 
         //Open New Dutch Auction
@@ -640,6 +640,7 @@ contract YoyoAuctionTest is Test {
         vm.startPrank(deployer);
         yoyoAuction.openNewAuction(tokenId, auctionType);
         uint256 startTime = block.timestamp;
+        uint256 startPrice = yoyoAuction.getCurrentAuctionPrice();
         vm.stopPrank();
 
         vm.roll(block.number + 1);
@@ -652,7 +653,7 @@ contract YoyoAuctionTest is Test {
         emit YoyoAuction.YoyoAuction__AuctionClosed(
             1,
             tokenId,
-            newBidPlaced,
+            startPrice,
             startTime,
             block.timestamp,
             USER_1,
@@ -668,6 +669,45 @@ contract YoyoAuctionTest is Test {
         assertTrue(
             yoyoAuction.getAuctionFromAuctionId(1).state ==
                 YoyoAuction.AuctionState.FINALIZED
+        );
+        assertEq(yoyoAuction.getAuctionFromAuctionId(1).nftOwner, USER_1);
+        assertEq(yoyoNft.ownerOf(tokenId), USER_1);
+    }
+
+    function testIfCloseAuctionWorksWithEnglishAuctionAndMintNft() public {
+        uint256 tokenId = 5;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.ENGLISH;
+
+        //Open New English Auction
+        vm.startPrank(deployer);
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+        uint256 startTime = block.timestamp;
+        uint256 startPrice = yoyoNft.getBasicMintPrice();
+        vm.stopPrank();
+
+        vm.roll(block.number + 1);
+        vm.warp(yoyoAuction.getAuctionFromAuctionId(1).endTime - 4 hours);
+        uint256 newBidPlaced = yoyoNft.getBasicMintPrice() * 2;
+
+        //Place a bid on the auction
+        vm.startPrank(USER_1);
+        yoyoAuction.placeBidOnAuction{value: newBidPlaced}(1);
+        vm.stopPrank();
+
+        vm.roll(block.number + 1);
+        vm.warp(yoyoAuction.getAuctionFromAuctionId(1).endTime);
+        //PerformUpkeep check conditions and call closeAuction function
+        yoyoAuction.performUpkeep(abi.encode(1));
+
+        assertTrue(
+            yoyoAuction.getAuctionFromAuctionId(1).state ==
+                YoyoAuction.AuctionState.FINALIZED
+        );
+        assertEq(yoyoAuction.getAuctionFromAuctionId(1).startTime, startTime);
+        assertEq(yoyoAuction.getAuctionFromAuctionId(1).startPrice, startPrice);
+        assertEq(
+            yoyoAuction.getAuctionFromAuctionId(1).endTime,
+            block.timestamp
         );
         assertEq(yoyoAuction.getAuctionFromAuctionId(1).nftOwner, USER_1);
         assertEq(yoyoNft.ownerOf(tokenId), USER_1);
@@ -727,5 +767,48 @@ contract YoyoAuctionTest is Test {
         vm.stopPrank();
 
         assertEq(yoyoNft.getBasicMintPrice(), newPrice);
+    }
+
+    //Test getters
+
+    function testGetContractOwner() public {
+        assertEq(yoyoAuction.getContractOwner(), deployer);
+    }
+
+    function testGetNftContract() public {
+        assertEq(yoyoAuction.getNftContract(), address(yoyoNft));
+    }
+
+    function testGetAuctionCounterInitiallyZero() public {
+        assertEq(yoyoAuction.getAuctionCounter(), 0);
+    }
+
+    function testGetAuctionDurationInHours() public {
+        assertEq(yoyoAuction.getAuctionDurationInHours(), 24 hours);
+    }
+
+    function testGetMinimumBidChangeAmount() public {
+        uint256 basicMintPrice = yoyoNft.getBasicMintPrice();
+        assertEq(yoyoAuction.getMinimumBidChangeAmount(), basicMintPrice / 40);
+    }
+
+    function testGetDutchAuctionStartPriceMultiplier() public {
+        assertEq(yoyoAuction.getDutchAuctionStartPriceMultiplier(), 13);
+    }
+
+    function testGetAuctionFromAuctionIdReturnsEmpty() public {
+        yoyoAuction.getAuctionFromAuctionId(0);
+        assertTrue(
+            yoyoAuction.getAuctionFromAuctionId(0).state ==
+                YoyoAuction.AuctionState.NOT_STARTED
+        );
+    }
+
+    function testGetCurrentAuction() public {
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(5, YoyoAuction.AuctionType.ENGLISH);
+        uint256 auctionCounter = yoyoAuction.getAuctionCounter();
+
+        assertEq(yoyoAuction.getCurrentAuction().auctionId, auctionCounter);
     }
 }

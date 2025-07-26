@@ -394,7 +394,12 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
             auction.higherBid
         );
 
-        try yoyoNftContract.mintNft(auction.higherBidder, auction.tokenId) {
+        try
+            yoyoNftContract.mintNft{value: auction.higherBid}(
+                auction.higherBidder,
+                auction.tokenId
+            )
+        {
             auction.state = AuctionState.FINALIZED;
             auction.nftOwner = auction.higherBidder;
 
@@ -466,7 +471,12 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
             revert YoyoAuction__NoTokenToMint();
         }
 
-        try yoyoNftContract.mintNft(auction.higherBidder, auction.tokenId) {
+        try
+            yoyoNftContract.mintNft{value: auction.higherBid}(
+                auction.higherBidder,
+                auction.tokenId
+            )
+        {
             auction.state = AuctionState.FINALIZED;
             auction.nftOwner = auction.higherBidder;
 
@@ -510,6 +520,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
             revert YoyoAuction__CannotChangeMintPriceDuringOpenAuction();
         }
         yoyoNftContract.setBasicMintPrice(_newPrice);
+        s_minimumBidChangeAmount = _newPrice / 40; // 2,5% of the basic mint price
     }
 
     //Getter Functions
