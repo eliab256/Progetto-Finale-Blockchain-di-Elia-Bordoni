@@ -346,11 +346,13 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
             revert YoyoAuction__BidTooLow();
         }
         //refund previous bidder
-        refundPreviousBidder(
-            auction.higherBid,
-            auction.higherBidder,
-            auction.auctionId
-        );
+        if (auction.higherBidder != address(0)) {
+            refundPreviousBidder(
+                auction.higherBid,
+                auction.higherBidder,
+                auction.auctionId
+            );
+        }
 
         // Update the auction with the new bid
         auction.higherBidder = _sender;
@@ -494,7 +496,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
 
     // Functions to change auction parameters
     function changeMintPrice(uint256 _newPrice) public onlyOwner {
-        if (address(yoyoNftContract) != address(0)) {
+        if (address(yoyoNftContract) == address(0)) {
             revert YoyoAuction__NftContractNotSet();
         }
         if (_newPrice == 0) {
@@ -505,14 +507,6 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         ];
         if (
             currentAuction.state == AuctionState.OPEN &&
-            currentAuction.auctionType == AuctionType.ENGLISH &&
-            currentAuction.higherBid < _newPrice
-        ) {
-            revert YoyoAuction__CannotChangeMintPriceDuringOpenAuction();
-        }
-        if (
-            currentAuction.state == AuctionState.OPEN &&
-            currentAuction.auctionType == AuctionType.DUTCH &&
             currentAuction.higherBid < _newPrice
         ) {
             revert YoyoAuction__CannotChangeMintPriceDuringOpenAuction();
@@ -535,6 +529,18 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
 
     function getAuctionDurationInHours() external view returns (uint256) {
         return s_auctionDurationInHours;
+    }
+
+    function getMinimumBidChangeAmount() external view returns (uint256) {
+        return s_minimumBidChangeAmount;
+    }
+
+    function getDutchAuctionStartPriceMultiplier()
+        external
+        view
+        returns (uint256)
+    {
+        return s_dutchAuctionStartPriceMultiplier;
     }
 
     function getAuctionFromAuctionId(
