@@ -713,7 +713,52 @@ contract YoyoAuctionTest is Test {
         assertEq(yoyoNft.ownerOf(tokenId), USER_1);
     }
 
-    function testIfCloseAuctionFailMintAndEmitEvents() public {
+    function testIfCloseAuctionFailMintWithoutErrorAndEmitEvents() public {
+        //Deploy the mock contract
+        YoyoNftMockFailingMint yoyoNftMockFailingMint = new YoyoNftMockFailingMint();
+        //deploy new istance of YoyoAuction with the mock contract
+        YoyoAuction yoyoAuctionWithMock = new YoyoAuction();
+        yoyoAuctionWithMock.setNftContract(address(yoyoNftMockFailingMint));
+
+        uint256 tokenId = 5;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
+
+        yoyoAuctionWithMock.openNewAuction(tokenId, auctionType);
+
+        //Set Mock to fail mint
+        string memory reasonEmpty = "";
+        yoyoNftMockFailingMint.setShouldFailMint(true, reasonEmpty);
+
+        //Place a Bid and trigger close auction
+        vm.startPrank(USER_1);
+        uint256 newBidPlaced = yoyoAuctionWithMock.getCurrentAuctionPrice();
+        vm.expectEmit(true, true, true, true);
+        emit YoyoAuction.YoyoAuction__AuctionClosed(
+            1,
+            tokenId,
+            yoyoAuctionWithMock.getAuctionFromAuctionId(1).startPrice,
+            yoyoAuctionWithMock.getAuctionFromAuctionId(1).startTime,
+            block.timestamp,
+            USER_1,
+            newBidPlaced
+        );
+        vm.expectEmit(true, true, true, false);
+        emit YoyoAuction.YoyoAuction__MintFailedLog(
+            1,
+            tokenId,
+            USER_1,
+            reasonEmpty
+        );
+        yoyoAuctionWithMock.placeBidOnAuction{value: newBidPlaced}(1);
+        vm.stopPrank();
+
+        YoyoAuction.AuctionStruct memory currentAuction = yoyoAuctionWithMock
+            .getAuctionFromAuctionId(1);
+        assertTrue(currentAuction.state == YoyoAuction.AuctionState.CLOSED);
+        assertEq(currentAuction.nftOwner, address(0));
+    }
+
+    function testIfCloseAuctionFailMintWithErrorAndEmitEvents() public {
         //Deploy the mock contract
         YoyoNftMockFailingMint yoyoNftMockFailingMint = new YoyoNftMockFailingMint();
         //deploy new istance of YoyoAuction with the mock contract
@@ -753,6 +798,59 @@ contract YoyoAuctionTest is Test {
         assertEq(currentAuction.nftOwner, address(0));
     }
 
+    function testIfManulaMintCatchErrorWhenItFails() public {
+        //Deploy the mock contract
+        YoyoNftMockFailingMint yoyoNftMockFailingMint = new YoyoNftMockFailingMint();
+        //deploy new istance of YoyoAuction with the mock contract
+        YoyoAuction yoyoAuctionWithMock = new YoyoAuction();
+        yoyoAuctionWithMock.setNftContract(address(yoyoNftMockFailingMint));
+
+        uint256 tokenId = 5;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
+
+        yoyoAuctionWithMock.openNewAuction(tokenId, auctionType);
+
+        //Set Mock to fail mint
+        string memory reason = "mint failed";
+        yoyoNftMockFailingMint.setShouldFailMint(true, reason);
+
+        //Place a Bid and trigger close auction
+        vm.startPrank(USER_1);
+        uint256 newBidPlaced = yoyoAuctionWithMock.getCurrentAuctionPrice();
+        vm.expectEmit(true, true, true, true);
+        emit YoyoAuction.YoyoAuction__AuctionClosed(
+            1,
+            tokenId,
+            yoyoAuctionWithMock.getAuctionFromAuctionId(1).startPrice,
+            yoyoAuctionWithMock.getAuctionFromAuctionId(1).startTime,
+            block.timestamp,
+            USER_1,
+            newBidPlaced
+        );
+        //Auction is closed but mint fails
+        yoyoAuctionWithMock.placeBidOnAuction{value: newBidPlaced}(1);
+        vm.stopPrank();
+
+        YoyoAuction.AuctionStruct memory currentAuction = yoyoAuctionWithMock
+            .getAuctionFromAuctionId(1);
+        assertTrue(currentAuction.state == YoyoAuction.AuctionState.CLOSED);
+        assertEq(currentAuction.nftOwner, address(0));
+
+        //Try to manually mint the NFT
+        vm.expectEmit(true, true, true, false);
+        emit YoyoAuction.YoyoAuction__MintFailedLog(1, tokenId, USER_1, reason);
+        yoyoAuctionWithMock.manualMintForWinner(1);
+
+        assertTrue(
+            yoyoAuctionWithMock.getAuctionFromAuctionId(1).state ==
+                YoyoAuction.AuctionState.CLOSED
+        );
+        assertEq(
+            yoyoAuctionWithMock.getAuctionFromAuctionId(1).nftOwner,
+            address(0)
+        );
+    }
+
     // function testIfManualMintWorksAfterMintFailed() public {
     //     //Deploy the mock contract
     //     YoyoNftMockFailingMint yoyoNftMockFailingMint = new YoyoNftMockFailingMint();
@@ -760,9 +858,9 @@ contract YoyoAuctionTest is Test {
     //     YoyoAuction yoyoAuctionWithMock = new YoyoAuction();
     //     yoyoAuctionWithMock.setNftContract(address(yoyoNftMockFailingMint));
 
+    //     //Open New Auction
     //     uint256 tokenId = 5;
     //     YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
-
     //     yoyoAuctionWithMock.openNewAuction(tokenId, auctionType);
 
     //     //Set Mock to fail mint
@@ -775,6 +873,7 @@ contract YoyoAuctionTest is Test {
     //     yoyoAuctionWithMock.placeBidOnAuction{value: newBidPlaced}(1);
     //     vm.stopPrank();
 
+    //     //Assert Auction is closed but not finalized due to mint failure
     //     assertTrue(
     //         yoyoAuctionWithMock.getAuctionFromAuctionId(1).state ==
     //             YoyoAuction.AuctionState.CLOSED
@@ -782,11 +881,11 @@ contract YoyoAuctionTest is Test {
 
     //     //Set Mock to not fail mint
     //     yoyoNftMockFailingMint.setShouldFailMint(false, "");
-
+    //     yoyoNftMockFailingMint.resetToken(tokenId);
+    //     vm.roll(block.number + 1);
     //     vm.expectEmit(true, true, true, false);
     //     emit YoyoAuction.YoyoAuction__AuctionFinalized(1, tokenId, USER_1);
     //     yoyoAuctionWithMock.manualMintForWinner(1);
-
     //     assertTrue(
     //         yoyoAuctionWithMock.getAuctionFromAuctionId(1).state ==
     //             YoyoAuction.AuctionState.FINALIZED
@@ -874,7 +973,6 @@ contract YoyoAuctionTest is Test {
     }
 
     //Test getters
-
     function testGetContractOwner() public {
         assertEq(yoyoAuction.getContractOwner(), deployer);
     }
