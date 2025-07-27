@@ -5,6 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {YoyoAuction} from "../src/YoyoAuction.sol";
 import {YoyoNft} from "../src/YoyoNft.sol";
 import {YoyoNftMockFailingMint} from "./Mocks/YoyoNftMockFailingMint.sol";
+import {RevertOnReceiverMock} from "./Mocks/RevertOnReceiverMock.sol";
 import {DeployYoyoAuctionAndYoyoNft} from "../script/DeployYoyoAuctionAndYoyoNft.s.sol";
 
 //Il mock serve per testare i casi in cui si prova a inserire valori non validi dentro le enum
@@ -631,6 +632,34 @@ contract YoyoAuctionTest is Test {
         vm.stopPrank();
     }
 
+    function testIfPlaceBidRevertDueToFailedRefund() public {
+        uint256 tokenId = 5;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.ENGLISH;
+
+        //Open New English Auction
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+
+        YoyoAuction.AuctionStruct memory auction = yoyoAuction
+            .getAuctionFromAuctionId(1);
+
+        uint256 newBidPlaced = yoyoNft.getBasicMintPrice() +
+            yoyoAuction.getMinimumBidChangeAmount();
+        //Mock contract that will revert refund place a bid and become new higher bidder
+        RevertOnReceiverMock revertOnReceiverMock = new RevertOnReceiverMock();
+        revertOnReceiverMock.payAuctionContract{value: newBidPlaced}(
+            payable(address(yoyoAuction)),
+            auction.auctionId
+        );
+
+        //Place a new bid with user and try to refund the previous bidder
+        vm.startPrank(USER_1);
+        vm.expectRevert(
+            YoyoAuction.YoyoAuction__PreviousBidderRefundFailed.selector
+        );
+        yoyoAuction.placeBidOnAuction{value: newBidPlaced * 2}(1);
+    }
+
     //Test Close Auction Function
     function testIfCloseAuctionWorksWithDutchAuctionAndMintNft() public {
         uint256 tokenId = 5;
@@ -1012,5 +1041,54 @@ contract YoyoAuctionTest is Test {
         uint256 auctionCounter = yoyoAuction.getAuctionCounter();
 
         assertEq(yoyoAuction.getCurrentAuction().auctionId, auctionCounter);
+    }
+
+    function testIfGetCurrentAuctionPriceRevertsIfNoAuctionOpen() public {
+        vm.expectRevert(YoyoAuction.YoyoAuction__AuctionNotOpen.selector);
+        yoyoAuction.getCurrentAuctionPrice();
+    }
+
+    function testGetCurrentAuctionPriceOnEnglishAuction() public {
+        uint256 tokenId = 5;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.ENGLISH;
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+
+        uint256 minimumBidChangeAmountOfEnglishAuction = yoyoAuction
+            .getAuctionFromAuctionId(1)
+            .minimumBidChangeAmount;
+        uint256 bidPlaced = 1 ether;
+
+        vm.prank(USER_1);
+        yoyoAuction.placeBidOnAuction{value: bidPlaced}(1);
+
+        assertEq(
+            yoyoAuction.getCurrentAuctionPrice(),
+            bidPlaced + minimumBidChangeAmountOfEnglishAuction
+        );
+    }
+
+    function testGetCurrentAuctionPriceOnDutchAuction() public {
+        uint256 tokenId = 5;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+
+        uint256 startPrice = yoyoAuction.getAuctionFromAuctionId(1).startPrice;
+        uint256 startTime = yoyoAuction.getAuctionFromAuctionId(1).startTime;
+        uint256 endTime = yoyoAuction.getAuctionFromAuctionId(1).endTime;
+        uint256 priceAtTheEnd = startPrice /
+            yoyoAuction.getDutchAuctionStartPriceMultiplier();
+        uint256 totalDrop = startPrice - priceAtTheEnd;
+
+        vm.warp(startTime); // Warp to the start of the auction
+        assertEq(yoyoAuction.getCurrentAuctionPrice(), startPrice);
+
+        vm.warp(startTime + (endTime - startTime) / 2); // Warp to the middle of the auction
+        uint256 currentAuctionPriceTest = startPrice - (totalDrop / 2);
+        assertEq(yoyoAuction.getCurrentAuctionPrice(), currentAuctionPriceTest);
+
+        vm.warp(endTime); // Warp to the end of the auction
+        assertEq(yoyoAuction.getCurrentAuctionPrice(), priceAtTheEnd);
     }
 }

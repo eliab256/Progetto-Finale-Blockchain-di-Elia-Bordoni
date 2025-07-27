@@ -566,11 +566,12 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         AuctionStruct memory auction = s_auctionsFromAuctionId[
             s_auctionCounter
         ];
+        uint256 currentPrice;
         if (auction.state != AuctionState.OPEN) {
             revert YoyoAuction__AuctionNotOpen();
         }
         if (auction.auctionType == AuctionType.ENGLISH) {
-            return auction.higherBid + auction.minimumBidChangeAmount;
+            currentPrice = auction.higherBid + auction.minimumBidChangeAmount;
         }
         if (auction.auctionType == AuctionType.DUTCH) {
             uint256 dropAmount = YoyoDutchAuctionLibrary
@@ -579,8 +580,8 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
                     auction.startPrice,
                     s_dutchAuctionDropNumberOfIntervals
                 );
-            return
-                YoyoDutchAuctionLibrary.currentPriceFromTimeRangeCalculator(
+            currentPrice = YoyoDutchAuctionLibrary
+                .currentPriceFromTimeRangeCalculator(
                     auction.startPrice,
                     yoyoNftContract.getBasicMintPrice(),
                     dropAmount,
@@ -589,6 +590,6 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
                     s_dutchAuctionDropNumberOfIntervals
                 );
         }
-        return auction.higherBid;
+        return currentPrice;
     }
 }

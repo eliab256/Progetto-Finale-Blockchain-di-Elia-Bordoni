@@ -1,12 +1,8 @@
-
 Uncovered for src/YoyoAuction.sol:
 - Branch (branch: 7, path: 1) (location: source ID 44, lines 217..223, bytes 6481..6779, hits: 0)
 - Branch (branch: 8, path: 1) (location: source ID 44, lines 219..223, bytes 6620..6781, hits: 0)
 - Line (location: source ID 44, lines 222..223, bytes 6769..6809, hits: 0)
 - Statement (location: source ID 44, lines 222..223, bytes 6769..6809, hits: 0)
-- Branch (branch: 17, path: 0) (location: source ID 44, lines 367..370, bytes 11381..11462, hits: 0)
-- Line (location: source ID 44, lines 368..369, bytes 11399..11447, hits: 0)
-- Statement (location: source ID 44, lines 368..369, bytes 11399..11447, hits: 0)
 - Line (location: source ID 44, lines 411..419, bytes 12833..13067, hits: 0)
 - Statement (location: source ID 44, lines 411..419, bytes 12833..13067, hits: 0)
 - Statement (location: source ID 44, lines 411..419, bytes 12867..13067, hits: 0)
@@ -32,13 +28,6 @@ Uncovered for src/YoyoAuction.sol:
 - Statement (location: source ID 44, lines 488..496, bytes 15498..15698, hits: 0)
 - Line (location: source ID 44, lines 489..495, bytes 15512..15687, hits: 0)
 - Statement (location: source ID 44, lines 489..495, bytes 15512..15687, hits: 0)
-- Branch (branch: 28, path: 0) (location: source ID 44, lines 569..572, bytes 18006..18067, hits: 0)
-- Line (location: source ID 44, lines 570..571, bytes 18020..18056, hits: 0)
-- Statement (location: source ID 44, lines 570..571, bytes 18020..18056, hits: 0)
-- Branch (branch: 29, path: 0) (location: source ID 44, lines 572..575, bytes 18124..18206, hits: 0)
-- Line (location: source ID 44, lines 573..574, bytes 18138..18195, hits: 0)
-- Statement (location: source ID 44, lines 573..574, bytes 18138..18195, hits: 0)
-- Statement (location: source ID 44, lines 573..574, bytes 18145..18195, hits: 0)
-- Line (location: source ID 44, lines 592..593, bytes 18947..18971, hits: 0)
-- Statement (location: source ID 44, lines 592..593, bytes 18947..18971, hits: 0)
+
+
 
