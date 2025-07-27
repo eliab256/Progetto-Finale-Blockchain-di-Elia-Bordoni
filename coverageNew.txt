@@ -1,0 +1,35 @@
+
+
+
+Uncovered for src/YoyoAuction.sol:
+- Branch (branch: 7, path: 1) (location: source ID 44, lines 217..223, bytes 6481..6779, hits: 0)
+- Branch (branch: 8, path: 1) (location: source ID 44, lines 219..223, bytes 6620..6781, hits: 0)
+- Line (location: source ID 44, lines 222..223, bytes 6769..6809, hits: 0)
+- Statement (location: source ID 44, lines 222..223, bytes 6769..6809, hits: 0)
+- Line (location: source ID 44, lines 411..419, bytes 12833..13067, hits: 0)
+- Statement (location: source ID 44, lines 411..419, bytes 12833..13067, hits: 0)
+- Statement (location: source ID 44, lines 411..419, bytes 12867..13067, hits: 0)
+- Line (location: source ID 44, lines 412..418, bytes 12881..13056, hits: 0)
+- Statement (location: source ID 44, lines 412..418, bytes 12881..13056, hits: 0)
+- Line (location: source ID 44, lines 479..489, bytes 15141..15426, hits: 0)
+- Statement (location: source ID 44, lines 479..489, bytes 15141..15426, hits: 0)
+- Statement (location: source ID 44, lines 479..489, bytes 15141..15426, hits: 0)
+- Line (location: source ID 44, lines 480..481, bytes 15155..15193, hits: 0)
+- Statement (location: source ID 44, lines 480..481, bytes 15155..15193, hits: 0)
+- Line (location: source ID 44, lines 481..482, bytes 15207..15246, hits: 0)
+- Statement (location: source ID 44, lines 481..482, bytes 15207..15246, hits: 0)
+- Line (location: source ID 44, lines 483..488, bytes 15261..15415, hits: 0)
+- Statement (location: source ID 44, lines 483..488, bytes 15261..15415, hits: 0)
+- Line (location: source ID 44, lines 488..496, bytes 15427..15661, hits: 0)
+- Statement (location: source ID 44, lines 488..496, bytes 15427..15661, hits: 0)
+- Statement (location: source ID 44, lines 488..496, bytes 15461..15661, hits: 0)
+- Line (location: source ID 44, lines 489..495, bytes 15475..15650, hits: 0)
+- Statement (location: source ID 44, lines 489..495, bytes 15475..15650, hits: 0)
+
+
+
+Uncovered for src/YoyoNft.sol:
+- Branch (branch: 1, path: 0) (location: source ID 46, lines 72..75, bytes 2108..2169, hits: 0)
+- Line (location: source ID 46, lines 73..74, bytes 2122..2158, hits: 0)
+- Statement (location: source ID 46, lines 73..74, bytes 2122..2158, hits: 0)
+

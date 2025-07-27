@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Test, console} from "forge-std/Test.sol";
 import {YoyoAuction} from "../src/YoyoAuction.sol";
-import {YoyoNft} from "../src/YoyoNft.sol";
+import {YoyoNft, ConstructorParams} from "../src/YoyoNft.sol";
 import {YoyoNftMockFailingMint} from "./Mocks/YoyoNftMockFailingMint.sol";
 import {RevertOnReceiverMock} from "./Mocks/RevertOnReceiverMock.sol";
 import {DeployYoyoAuctionAndYoyoNft} from "../script/DeployYoyoAuctionAndYoyoNft.s.sol";
@@ -646,7 +646,14 @@ contract YoyoAuctionTest is Test {
         uint256 newBidPlaced = yoyoNft.getBasicMintPrice() +
             yoyoAuction.getMinimumBidChangeAmount();
         //Mock contract that will revert refund place a bid and become new higher bidder
-        RevertOnReceiverMock revertOnReceiverMock = new RevertOnReceiverMock();
+        ConstructorParams memory params = ConstructorParams({
+            baseURI: "https://example.com/api/metadata/",
+            auctionContract: address(yoyoAuction),
+            basicMintPrice: 0.01 ether
+        });
+        RevertOnReceiverMock revertOnReceiverMock = new RevertOnReceiverMock(
+            params
+        );
         revertOnReceiverMock.payAuctionContract{value: newBidPlaced}(
             payable(address(yoyoAuction)),
             auction.auctionId
@@ -776,7 +783,7 @@ contract YoyoAuctionTest is Test {
             1,
             tokenId,
             USER_1,
-            reasonEmpty
+            "unknown error"
         );
         yoyoAuctionWithMock.placeBidOnAuction{value: newBidPlaced}(1);
         vm.stopPrank();
@@ -827,6 +834,7 @@ contract YoyoAuctionTest is Test {
         assertEq(currentAuction.nftOwner, address(0));
     }
 
+    //Test manual mint function
     function testIfManulaMintCatchErrorWhenItFails() public {
         //Deploy the mock contract
         YoyoNftMockFailingMint yoyoNftMockFailingMint = new YoyoNftMockFailingMint();
@@ -925,6 +933,13 @@ contract YoyoAuctionTest is Test {
     //     );
     // }
 
+    function testIfManualMintRevertsIfNftContractNotSet() public {
+        YoyoAuction yoyoAuctionWithoutNft = new YoyoAuction();
+
+        vm.expectRevert(YoyoAuction.YoyoAuction__NftContractNotSet.selector);
+        yoyoAuctionWithoutNft.manualMintForWinner(1);
+    }
+
     function testIfManualMintRevertsIfNotOwner() public {
         vm.startPrank(USER_2);
         vm.expectRevert(YoyoAuction.YoyoAuction__NotOwner.selector);
@@ -938,6 +953,25 @@ contract YoyoAuctionTest is Test {
         //Open New Dutch Auction
         vm.prank(deployer);
         yoyoAuction.openNewAuction(tokenId, auctionType);
+
+        vm.startPrank(deployer);
+        vm.expectRevert(YoyoAuction.YoyoAuction__NoTokenToMint.selector);
+        yoyoAuction.manualMintForWinner(1);
+        vm.stopPrank();
+    }
+
+    function testIfManualMintRevertsDueToNftOwnerAlreadySet() public {
+        uint256 tokenId = 5;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
+
+        //Open New Dutch Auction
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+        uint256 bidAmount = yoyoAuction.getAuctionFromAuctionId(1).startPrice;
+
+        //Place a bid to close the auction
+        vm.prank(USER_1);
+        yoyoAuction.placeBidOnAuction{value: bidAmount}(1);
 
         vm.startPrank(deployer);
         vm.expectRevert(YoyoAuction.YoyoAuction__NoTokenToMint.selector);

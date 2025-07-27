@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import "../../src/YoyoAuction.sol";
+import {YoyoAuction} from "../../src/YoyoAuction.sol";
+import {YoyoNft, ConstructorParams} from "../../src/YoyoNft.sol";
 
 contract RevertOnReceiverMock {
+    YoyoNft public nftContract;
     error RevertOnReceiverMock__ThisContractDoesntAcceptDeposit();
 
-    constructor() {}
+    constructor(ConstructorParams memory _params) {
+        nftContract = new YoyoNft(_params);
+    }
 
     /**
      * @dev This function pay auction contract to palce a bid and become the bidder who receive refund.
@@ -18,6 +22,19 @@ contract RevertOnReceiverMock {
         YoyoAuction(yoyoAuctionContract).placeBidOnAuction{value: msg.value}(
             auctionId
         );
+    }
+
+    /**
+     * @dev This function call withdraw and make it fail due to revert on receive function.
+     */
+    function callWithdrawFromNftContract(
+        address payable yoyoNftContract
+    ) public {
+        YoyoNft(yoyoNftContract).withdraw();
+    }
+
+    function getNftContract() public view returns (YoyoNft) {
+        return nftContract;
     }
 
     /**

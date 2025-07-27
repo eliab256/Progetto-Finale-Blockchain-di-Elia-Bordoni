@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {YoyoNft, ConstructorParams} from "../src/YoyoNft.sol";
+import {RevertOnReceiverMock} from "./Mocks/RevertOnReceiverMock.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract YoyoNftTest is Test {
@@ -26,14 +27,15 @@ contract YoyoNftTest is Test {
     uint256 public constant STARTING_BALANCE_USER_2 = 10 ether;
     uint256 public constant STARTING_BALANCE_USER_NO_BALANCE = 0 ether;
 
-    function setUp() public {
-        deployer = msg.sender;
-
-        ConstructorParams memory params = ConstructorParams({
+    ConstructorParams params =
+        ConstructorParams({
             baseURI: BASE_URI_EXAMPLE,
             auctionContract: address(AUCTION_CONTRACT),
             basicMintPrice: BASIC_MINT_PRICE
         });
+
+    function setUp() public {
+        deployer = msg.sender;
 
         vm.startPrank(deployer);
         yoyoNft = new YoyoNft(params);
@@ -173,6 +175,21 @@ contract YoyoNftTest is Test {
         vm.prank(deployer);
         vm.expectRevert(YoyoNft.YoyoNft__ContractBalanceIsZero.selector);
         yoyoNft.withdraw();
+    }
+
+    function testIfWithdrawRevertsDueToFailedTransfer() public {
+        RevertOnReceiverMock revertOnReceiverMock = new RevertOnReceiverMock(
+            params
+        );
+
+        YoyoNft newYoyoNft = revertOnReceiverMock.getNftContract();
+
+        vm.deal(address(revertOnReceiverMock), 0.1 ether);
+        vm.deal(address(newYoyoNft), 0.1 ether);
+
+        vm.prank(address(revertOnReceiverMock));
+        vm.expectRevert(YoyoNft.YoyoNft__WithdrawFailed.selector);
+        newYoyoNft.withdraw();
     }
 
     /*//////////////////////////////////////////////////////////////

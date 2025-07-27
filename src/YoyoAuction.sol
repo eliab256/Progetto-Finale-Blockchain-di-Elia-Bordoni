@@ -464,10 +464,10 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
         }
         AuctionStruct storage auction = s_auctionsFromAuctionId[_auctionId];
 
-        if (auction.nftOwner != address(0)) {
-            revert YoyoAuction__NoTokenToMint();
-        }
-        if (auction.state != AuctionState.CLOSED) {
+        if (
+            auction.nftOwner != address(0) ||
+            auction.state != AuctionState.CLOSED
+        ) {
             revert YoyoAuction__NoTokenToMint();
         }
 
