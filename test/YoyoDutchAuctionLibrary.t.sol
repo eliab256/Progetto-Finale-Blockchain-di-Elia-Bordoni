@@ -25,7 +25,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
             );
     }
 
-    // Test 1: Calculate start price from intervals
+    // Calculate start price from intervals
     function test_startPriceFromIntervals() public {
         uint256 reservePrice = 100 ether;
         uint256 intervals = 10;
@@ -41,7 +41,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(startPrice, 110 ether);
     }
 
-    // Test 2: Calculate start price from auction duration
+    // Calculate start price from auction duration
     function test_startPriceFromAuctionDuration() public {
         uint256 reservePrice = 50 ether;
         uint256 auctionDuration = 100 minutes;
@@ -59,7 +59,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(startPrice, 55 ether); // 50 + (100/10)*0.5
     }
 
-    // Test 3: Calculate number of intervals from drop amount
+    // Calculate number of intervals from drop amount
     function test_numberOfIntervalsFromDropAmount() public {
         uint256 startPrice = 200 ether;
         uint256 reservePrice = 150 ether;
@@ -75,7 +75,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(intervals, 5); // (200-150)/10
     }
 
-    // Test 4: Calculate total auction duration
+    // Calculate total auction duration
     function test_auctionDurationCalculation() public {
         uint256 intervals = 8;
         uint256 dropDuration = 15 minutes;
@@ -86,7 +86,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(duration, 120 minutes);
     }
 
-    // Test 5: Calculate drop amount from prices and intervals
+    // Calculate drop amount from prices and intervals
     function test_dropAmountCalculation() public {
         uint256 startPrice = 100 ether;
         uint256 reservePrice = 60 ether;
@@ -102,7 +102,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(dropAmount, 10 ether); // (100-60)/4
     }
 
-    // Test 6: Calculate price using multiplier
+    // Calculate price using multiplier
     function test_priceMultiplier() public {
         uint256 reservePrice = 1 ether;
         uint256 multiplier = 150; // 150% (1.5x)
@@ -118,7 +118,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(startPrice, 1.5 ether);
     }
 
-    // Test 7: Current price calculation - Scenario 1 (before first drop)
+    // Current price calculation - Scenario 1 (before first drop)
     function test_currentPriceAtStart() public {
         uint256 startPrice = 100 ether;
         uint256 reservePrice = 50 ether;
@@ -137,7 +137,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(currentPrice, startPrice);
     }
 
-    // Test 8: Current price calculation - Scenario 2 (after two drops)
+    // Current price calculation - Scenario 2 (after two drops)
     function test_currentPriceAfterTwoDrops() public {
         uint256 startPrice = 100 ether;
         uint256 reservePrice = 50 ether;
@@ -160,7 +160,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(currentPrice, 90 ether);
     }
 
-    // Test 9: Current price calculation - Scenario 3 (below reserve price)
+    // Current price calculation - Scenario 3 (below reserve price)
     function test_currentPriceBelowReserve() public {
         uint256 startPrice = 100 ether;
         uint256 reservePrice = 50 ether;
@@ -183,7 +183,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(currentPrice, reservePrice);
     }
 
-    // Test 10: Calculation with non-divisible duration
+    // Calculation with non-divisible duration
     function test_unevenDurationCalculation() public {
         uint256 auctionDuration = 100 minutes;
         uint256 dropDuration = 30 minutes;
@@ -198,7 +198,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(intervals, 3);
     }
 
-    // Test 11: Calculate drop amount from durations
+    // Calculate drop amount from durations
     function test_dropAmountFromDurations() public {
         uint256 startPrice = 200 ether;
         uint256 reservePrice = 100 ether;
@@ -217,7 +217,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(dropAmount, 25 ether);
     }
 
-    // Test 12: Calculate price using time range
+    // Calculate price using time range
     function test_currentPriceWithTimeRange() public {
         uint256 startPrice = 100 ether;
         uint256 reservePrice = 40 ether;
@@ -243,7 +243,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(currentPrice, 70 ether);
     }
 
-    // Test 13: Edge case - Zero drop amount
+    // Edge case - Zero drop amount
     function test_zeroDropAmount() public {
         uint256 startPrice = 100 ether;
         uint256 reservePrice = 100 ether;
@@ -265,7 +265,7 @@ contract YoyoDutchAuctionLibraryTest is Test {
         assertEq(currentPrice, startPrice);
     }
 
-    // Test 14: Edge case - Zero duration
+    // Edge case - Zero duration
     function test_zeroDuration() public {
         uint256 auctionDuration = 0;
         uint256 dropDuration = 10 minutes;
@@ -277,5 +277,158 @@ contract YoyoDutchAuctionLibraryTest is Test {
             );
 
         assertEq(intervals, 0);
+    }
+
+    // startPriceFromReserveAndDurationsCalculator
+    function test_startPriceFromReserveAndDurations() public {
+        uint256 reservePrice = 100 ether;
+        uint256 auctionDuration = 60 minutes;
+        uint256 dropDuration = 10 minutes;
+        uint256 dropAmount = 1 ether;
+
+        uint256 startPrice = YoyoDutchAuctionLibrary
+            .startPriceFromReserveAndDurationsCalculator(
+                reservePrice,
+                auctionDuration,
+                dropDuration,
+                dropAmount
+            );
+
+        // Calculation: 100 + (60/10)*1 = 106 ether
+        assertEq(startPrice, 106 ether);
+    }
+
+    // dropDurationFromAuctionDurationCalculator
+    function test_dropDurationCalculation() public {
+        uint256 auctionDuration = 120 minutes;
+        uint256 numberOfIntervals = 6;
+
+        uint256 dropDuration = YoyoDutchAuctionLibrary
+            .dropDurationFromAuctionDurationCalculator(
+                auctionDuration,
+                numberOfIntervals
+            );
+
+        // 120 / 6 = 20 minutes
+        assertEq(dropDuration, 20 minutes);
+    }
+
+    // fromAuctionDurationAndDropDurationToDropAmount
+    function test_fromAuctionDurationToDropAmount() public {
+        uint256 auctionDuration = 100 minutes;
+        uint256 dropDuration = 20 minutes;
+        uint256 reservePrice = 50 ether;
+        uint256 startPrice = 150 ether;
+
+        uint256 dropAmount = YoyoDutchAuctionLibrary
+            .fromAuctionDurationAndDropDurationToDropAmount(
+                auctionDuration,
+                dropDuration,
+                reservePrice,
+                startPrice
+            );
+
+        // Calculation: (150-50) / (100/20) = 100 / 5 = 20 ether
+        assertEq(dropAmount, 20 ether);
+    }
+
+    // dropAmountFromStartAndReserveCalculator
+    function test_dropAmountFromStartAndReserve() public {
+        uint256 startPrice = 300 ether;
+        uint256 reservePrice = 150 ether;
+        uint256 numberOfIntervals = 15;
+
+        uint256 dropAmount = YoyoDutchAuctionLibrary
+            .dropAmountFromStartAndReserveCalculator(
+                startPrice,
+                reservePrice,
+                numberOfIntervals
+            );
+
+        // (300-150)/15 = 10 ether
+        assertEq(dropAmount, 10 ether);
+    }
+
+    // Calculation with edge values - Division with remainder
+    function test_edgeCaseWithRemainder() public {
+        uint256 auctionDuration = 95 minutes; // 5700 seconds
+        uint256 dropDuration = 30 minutes; // 1800 seconds
+
+        uint256 intervals = YoyoDutchAuctionLibrary
+            .numberOfIntervalsFromDropDurationCalculator(
+                auctionDuration,
+                dropDuration
+            );
+
+        // 5700 / 1800 = 3.166 → 3 intervals
+        assertEq(intervals, 3);
+
+        uint256 dropDurationResult = YoyoDutchAuctionLibrary
+            .dropDurationFromAuctionDurationCalculator(
+                auctionDuration,
+                intervals
+            );
+
+        // 5700 / 3 = 1900 seconds
+        assertEq(dropDurationResult, 1900);
+    }
+
+    // Division by zero check - dropDurationFromAuctionDurationCalculator
+    function test_zeroIntervalsDropDuration() public {
+        uint256 auctionDuration = 100 minutes;
+        uint256 numberOfIntervals = 0;
+
+        vm.expectRevert(
+            YoyoDutchAuctionLibrary
+                .YoyoDutchAuctionLibrary__NumberOfIntervalsCannotBeZero
+                .selector
+        );
+        YoyoDutchAuctionLibrary.dropDurationFromAuctionDurationCalculator(
+            auctionDuration,
+            numberOfIntervals
+        );
+    }
+
+    // Division by zero check - startPriceFromReserveAndDurationsCalculator
+    function test_zeroDropDuration() public {
+        uint256 reservePrice = 100 ether;
+        uint256 auctionDuration = 60 minutes;
+        uint256 dropDuration = 0;
+        uint256 dropAmount = 1 ether;
+
+        vm.expectRevert(
+            YoyoDutchAuctionLibrary
+                .YoyoDutchAuctionLibrary__DropDurationCannotBeZero
+                .selector
+        );
+        YoyoDutchAuctionLibrary.startPriceFromReserveAndDurationsCalculator(
+            reservePrice,
+            auctionDuration,
+            dropDuration,
+            dropAmount
+        );
+    }
+
+    // Overflow protection check
+    function test_overflowProtection() public {
+        uint256 startPrice = type(uint256).max;
+        uint256 reservePrice = 0;
+        uint256 dropAmount = 1;
+        uint256 dropDuration = 1;
+        uint256 startTime = block.timestamp;
+
+        // Advance by 1 second
+        vm.warp(startTime + 1);
+
+        uint256 currentPrice = getCurrentPrice(
+            startPrice,
+            reservePrice,
+            dropAmount,
+            dropDuration,
+            startTime
+        );
+
+        // Ensure no overflow occurred
+        assertEq(currentPrice, startPrice - 1);
     }
 }

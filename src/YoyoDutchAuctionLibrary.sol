@@ -6,6 +6,9 @@ pragma solidity ^0.8.0;
 /// @notice Utility math functions for Dutch auctions with linear price drops
 
 library YoyoDutchAuctionLibrary {
+    error YoyoDutchAuctionLibrary__NumberOfIntervalsCannotBeZero();
+    error YoyoDutchAuctionLibrary__DropDurationCannotBeZero();
+
     /// @notice Calculates the start price from reserve price, number of intervals, and drop amount
     /// @param reservePrice The minimum price
     /// @param numberOfIntervals Total number of price drop steps
@@ -46,7 +49,10 @@ library YoyoDutchAuctionLibrary {
         uint256 auctionDuration,
         uint256 dropDuration,
         uint256 dropAmount
-    ) internal pure returns (uint256) {
+    ) public pure returns (uint256) {
+        if (dropDuration == 0) {
+            revert YoyoDutchAuctionLibrary__DropDurationCannotBeZero();
+        }
         return reservePrice + ((auctionDuration / dropDuration) * dropAmount);
     }
 
@@ -93,7 +99,10 @@ library YoyoDutchAuctionLibrary {
     function dropDurationFromAuctionDurationCalculator(
         uint256 auctionDuration,
         uint256 numberOfIntervals
-    ) internal pure returns (uint256) {
+    ) public pure returns (uint256) {
+        if (numberOfIntervals == 0) {
+            revert YoyoDutchAuctionLibrary__NumberOfIntervalsCannotBeZero();
+        }
         return auctionDuration / numberOfIntervals;
     }
 
