@@ -459,7 +459,7 @@ contract YoyoAuction is ReentrancyGuard, AutomationCompatibleInterface {
     }
 
     function manualMintForWinner(uint256 _auctionId) public onlyOwner {
-        if (address(yoyoNftContract) != address(0)) {
+        if (address(yoyoNftContract) == address(0)) {
             revert YoyoAuction__NftContractNotSet();
         }
         AuctionStruct storage auction = s_auctionsFromAuctionId[_auctionId];

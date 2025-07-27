@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {Test, console} from "forge-std/Test.sol";
 import {YoyoAuction} from "../src/YoyoAuction.sol";
 import {YoyoNft} from "../src/YoyoNft.sol";
+import {YoyoNftMockFailingMint} from "./Mocks/YoyoNftMockFailingMint.sol";
 import {DeployYoyoAuctionAndYoyoNft} from "../script/DeployYoyoAuctionAndYoyoNft.s.sol";
 
 //Il mock serve per testare i casi in cui si prova a inserire valori non validi dentro le enum
@@ -636,7 +637,6 @@ contract YoyoAuctionTest is Test {
         YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
 
         //Open New Dutch Auction
-
         vm.startPrank(deployer);
         yoyoAuction.openNewAuction(tokenId, auctionType);
         uint256 startTime = block.timestamp;
@@ -711,6 +711,110 @@ contract YoyoAuctionTest is Test {
         );
         assertEq(yoyoAuction.getAuctionFromAuctionId(1).nftOwner, USER_1);
         assertEq(yoyoNft.ownerOf(tokenId), USER_1);
+    }
+
+    function testIfCloseAuctionFailMintAndEmitEvents() public {
+        //Deploy the mock contract
+        YoyoNftMockFailingMint yoyoNftMockFailingMint = new YoyoNftMockFailingMint();
+        //deploy new istance of YoyoAuction with the mock contract
+        YoyoAuction yoyoAuctionWithMock = new YoyoAuction();
+        yoyoAuctionWithMock.setNftContract(address(yoyoNftMockFailingMint));
+
+        uint256 tokenId = 5;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
+
+        yoyoAuctionWithMock.openNewAuction(tokenId, auctionType);
+
+        //Set Mock to fail mint
+        string memory reason = "mint failed";
+        yoyoNftMockFailingMint.setShouldFailMint(true, reason);
+
+        //Place a Bid and trigger close auction
+        vm.startPrank(USER_1);
+        uint256 newBidPlaced = yoyoAuctionWithMock.getCurrentAuctionPrice();
+        vm.expectEmit(true, true, true, true);
+        emit YoyoAuction.YoyoAuction__AuctionClosed(
+            1,
+            tokenId,
+            yoyoAuctionWithMock.getAuctionFromAuctionId(1).startPrice,
+            yoyoAuctionWithMock.getAuctionFromAuctionId(1).startTime,
+            block.timestamp,
+            USER_1,
+            newBidPlaced
+        );
+        vm.expectEmit(true, true, true, false);
+        emit YoyoAuction.YoyoAuction__MintFailedLog(1, tokenId, USER_1, reason);
+        yoyoAuctionWithMock.placeBidOnAuction{value: newBidPlaced}(1);
+        vm.stopPrank();
+
+        YoyoAuction.AuctionStruct memory currentAuction = yoyoAuctionWithMock
+            .getAuctionFromAuctionId(1);
+        assertTrue(currentAuction.state == YoyoAuction.AuctionState.CLOSED);
+        assertEq(currentAuction.nftOwner, address(0));
+    }
+
+    // function testIfManualMintWorksAfterMintFailed() public {
+    //     //Deploy the mock contract
+    //     YoyoNftMockFailingMint yoyoNftMockFailingMint = new YoyoNftMockFailingMint();
+    //     //deploy new istance of YoyoAuction with the mock contract
+    //     YoyoAuction yoyoAuctionWithMock = new YoyoAuction();
+    //     yoyoAuctionWithMock.setNftContract(address(yoyoNftMockFailingMint));
+
+    //     uint256 tokenId = 5;
+    //     YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
+
+    //     yoyoAuctionWithMock.openNewAuction(tokenId, auctionType);
+
+    //     //Set Mock to fail mint
+    //     string memory reason = "mint failed";
+    //     yoyoNftMockFailingMint.setShouldFailMint(true, reason);
+
+    //     //Place a Bid and trigger close auction
+    //     vm.startPrank(USER_1);
+    //     uint256 newBidPlaced = yoyoAuctionWithMock.getCurrentAuctionPrice();
+    //     yoyoAuctionWithMock.placeBidOnAuction{value: newBidPlaced}(1);
+    //     vm.stopPrank();
+
+    //     assertTrue(
+    //         yoyoAuctionWithMock.getAuctionFromAuctionId(1).state ==
+    //             YoyoAuction.AuctionState.CLOSED
+    //     );
+
+    //     //Set Mock to not fail mint
+    //     yoyoNftMockFailingMint.setShouldFailMint(false, "");
+
+    //     vm.expectEmit(true, true, true, false);
+    //     emit YoyoAuction.YoyoAuction__AuctionFinalized(1, tokenId, USER_1);
+    //     yoyoAuctionWithMock.manualMintForWinner(1);
+
+    //     assertTrue(
+    //         yoyoAuctionWithMock.getAuctionFromAuctionId(1).state ==
+    //             YoyoAuction.AuctionState.FINALIZED
+    //     );
+    //     assertEq(
+    //         yoyoAuctionWithMock.getAuctionFromAuctionId(1).nftOwner,
+    //         USER_1
+    //     );
+    // }
+
+    function testIfManualMintRevertsIfNotOwner() public {
+        vm.startPrank(USER_2);
+        vm.expectRevert(YoyoAuction.YoyoAuction__NotOwner.selector);
+        yoyoAuction.manualMintForWinner(1);
+        vm.stopPrank();
+    }
+
+    function testIfManulaMintRevertsIfAuctionNotClosed() public {
+        uint256 tokenId = 5;
+        YoyoAuction.AuctionType auctionType = YoyoAuction.AuctionType.DUTCH;
+        //Open New Dutch Auction
+        vm.prank(deployer);
+        yoyoAuction.openNewAuction(tokenId, auctionType);
+
+        vm.startPrank(deployer);
+        vm.expectRevert(YoyoAuction.YoyoAuction__NoTokenToMint.selector);
+        yoyoAuction.manualMintForWinner(1);
+        vm.stopPrank();
     }
 
     //Test Change Mint Price
