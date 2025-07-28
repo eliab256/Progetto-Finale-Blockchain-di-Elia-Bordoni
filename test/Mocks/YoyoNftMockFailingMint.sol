@@ -40,7 +40,7 @@ contract YoyoNftMockFailingMint {
     /**
      * @dev Mint function that can be configured to fail
      */
-    function mintNft(address to, uint256 tokenId) external {
+    function mintNft(address to, uint256 tokenId) external payable {
         if (shouldPanic) {
             // Triggers a panic (caught by generic catch)
             assembly {
@@ -62,10 +62,6 @@ contract YoyoNftMockFailingMint {
     // Support functions for the YoyoAuction contract
     function getBasicMintPrice() external view returns (uint256) {
         return basicMintPrice;
-    }
-
-    function setBasicMintPrice(uint256 _price) external {
-        basicMintPrice = _price;
     }
 
     function getIfTokenIdIsMintable(
