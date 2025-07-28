@@ -1,11 +1,11 @@
 # Compiler files
-cache/
-out/
+foundry/cache/
+foundry/out/
 
 # Ignores development broadcast logs
-!/broadcast
-/broadcast/*/31337/
-/broadcast/**/dry-run/
+foundry/!/broadcast
+foundry/broadcast/*/31337/
+foundry/broadcast/**/dry-run/
 
 # Docs
 docs/
@@ -13,4 +13,4 @@ docs/
 # Dotenv file
 .env
 /node_modules
-/lib
+foundry/lib
