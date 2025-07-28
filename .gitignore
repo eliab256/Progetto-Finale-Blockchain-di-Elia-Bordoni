@@ -1,16 +1,24 @@
-# Compiler files
-foundry/cache/
-foundry/out/
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Ignores development broadcast logs
-foundry/!/broadcast
-foundry/broadcast/*/31337/
-foundry/broadcast/**/dry-run/
+node_modules
+dist
+dist-ssr
+*.local
 
-# Docs
-docs/
-
-# Dotenv file
-.env
-/node_modules
-foundry/lib
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
