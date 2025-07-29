@@ -1,3 +1,19 @@
+# Compiler files
+foundry/cache/
+foundry/out/
+
+# ignore development broadcast logs
+foundry/!/broadcast/
+foundry/broadcast/*/31337/
+foundry/broadcast/**/dry-run/
+
+# Docs
+docs/
+
+.env
+/node_modules
+foundry/lib
+
 # Logs
 logs
 *.log
