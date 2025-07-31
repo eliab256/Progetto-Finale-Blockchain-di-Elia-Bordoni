@@ -1,35 +1,30 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import './assets/styles/App.css';
+import Header from './componentes/Header';
+import Gallery from './componentes/Gallery';
+import CurrentAuction from './componentes/CurrentAuction';
+import MyNfts from './componentes/MyNfts';
+import AboutUs from './componentes/AboutUs';
+import { useSelector } from 'react-redux';
+import { type PageState } from './redux/pagesSlice';
 
 function App() {
-  const [count, setCount] = useState(0)
+    const currentOpenPage = useSelector(
+        (state: { currentPage: { currentPage: PageState } }) => state.currentPage.currentPage
+    );
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    const pageComponents = {
+        gallery: <Gallery />,
+        currentAuction: <CurrentAuction />,
+        myNfts: <MyNfts />,
+        aboutUs: <AboutUs />,
+    };
+
+    return (
+        <div className="relative w-full bg-blue-400">
+            <Header />
+            <main>{pageComponents[currentOpenPage]}</main>
+        </div>
+    );
 }
 
-export default App
+export default App;

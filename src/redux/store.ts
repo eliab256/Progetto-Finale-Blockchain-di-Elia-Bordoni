@@ -1,5 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { currentPageReducer } from './pagesSlice';
 
 export default configureStore({
-    reducer: {},
+    reducer: {
+        currentPage: currentPageReducer,
+    },
 });
