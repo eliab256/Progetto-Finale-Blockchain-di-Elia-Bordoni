@@ -3,6 +3,11 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
 }
 
 @layer base {
@@ -12,10 +17,12 @@
         margin: 0;
         padding: 0;
         display: flex;
+        flex-direction: column;
     }
 
     header {
         padding: 0.5rem;
+        height: 3rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -25,10 +32,47 @@
         left: 0;
         width: 100%;
 
-        background-color: white;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
         z-index: 50;
 
-        height: 3rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    main {
+        margin-top: 4rem;
+        margin-bottom: 4rem;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    h1 {
+        cursor: default;
+    }
+
+    h2 {
+        cursor: default;
+    }
+
+    h3 {
+        cursor: default;
+    }
+
+    h4 {
+        cursor: default;
+    }
+
+    h5 {
+        cursor: default;
+    }
+
+    h6 {
+        cursor: default;
+    }
+
+    p {
+        cursor: default;
     }
 }
