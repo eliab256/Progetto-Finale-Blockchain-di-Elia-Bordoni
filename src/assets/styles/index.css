@@ -1,4 +1,15 @@
+@import './Font.css';
+
 :root {
+    /* colors */
+    --mainPurple: rgb(147, 112, 186); /* Variazioni possibili: rgb(130, 95, 170) - rgb(160, 130, 200)*/
+    --secondPurple: rgb(130, 95, 170);
+    --thirdPurple: rgb(160, 130, 200);
+    --mainGreen: rgb(106, 170, 142); /*Variazioni possibili: rgb(90, 160, 130) - rgb(120, 180, 150)*/
+    --secondGreen: rgb(90, 160, 130);
+    --thirdGreen: rgb(120, 180, 150);
+
+    /* default parameters */
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -8,6 +19,9 @@
     *::after {
         box-sizing: border-box;
     }
+}
+
+@font-face {
 }
 
 @layer base {
@@ -40,16 +54,36 @@
     }
 
     main {
-        margin-top: 4rem;
-        margin-bottom: 4rem;
+        margin-top: 3rem;
+        margin-bottom: 3rem;
+    }
+
+    footer {
+        height: 3rem;
+        width: 100%;
     }
 
     button {
         cursor: pointer;
+        background-color: transparent;
+        border: none;
+        border-radius: 30px;
+    }
+
+    button:hover {
+        background-color: var(--thirdGreen);
     }
 
     h1 {
         cursor: default;
+        background: linear-gradient(to bottom, var(--mainPurple) 10%, var(--mainGreen) 90%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+        font-family: 'Amatic SC', cursive;
+        font-weight: bold;
+        /* display: inline-block; */
     }
 
     h2 {

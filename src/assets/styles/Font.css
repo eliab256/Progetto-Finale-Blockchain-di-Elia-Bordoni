@@ -1,0 +1,60 @@
+/* Amatic SC Bold */
+@font-face {
+    font-family: 'Amatic SC';
+    src: url('../fonts/AmaticSC-Bold.woff2') format('woff2'), url('../fonts/AmaticSC-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* Amatic SC Regular */
+@font-face {
+    font-family: 'Amatic SC';
+    src: url('../fonts/AmaticSC-Regular.woff2') format('woff2'), url('../fonts/AmaticSC-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Dancing Script Bold */
+@font-face {
+    font-family: 'Dancing Script';
+    src: url('../fonts/DancingScript-Bold.woff2') format('woff2'),
+        url('../fonts/DancingScript-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* Dancing Script Medium */
+@font-face {
+    font-family: 'Dancing Script';
+    src: url('../fonts/DancingScript-Medium.woff2') format('woff2'),
+        url('../fonts/DancingScript-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+}
+
+/* Dancing Script Regular */
+@font-face {
+    font-family: 'Dancing Script';
+    src: url('../fonts/DancingScript-Regular.woff2') format('woff2'),
+        url('../fonts/DancingScript-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Dancing Script SemiBold */
+@font-face {
+    font-family: 'Dancing Script';
+    src: url('../fonts/DancingScript-SemiBold.woff2') format('woff2'),
+        url('../fonts/DancingScript-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* UnifrakturMaguntia */
+@font-face {
+    font-family: 'UnifrakturMaguntia';
+    src: url('../fonts/UnifrakturMaguntia.woff2') format('woff2'),
+        url('../fonts/UnifrakturMaguntia.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
