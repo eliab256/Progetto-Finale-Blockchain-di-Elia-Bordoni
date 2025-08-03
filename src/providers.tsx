@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode } from 'react';
 import config from './rainbowkitConfig';
 import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
 import { Provider } from 'react-redux';
 import store from './redux/store';
@@ -15,7 +15,13 @@ const Providers = (props: { children: ReactNode }) => {
         <Provider store={store}>
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={config}>
-                    <RainbowKitProvider>{props.children}</RainbowKitProvider>
+                    <RainbowKitProvider
+                        theme={darkTheme({
+                            accentColor: '#825FAA',
+                        })}
+                    >
+                        {props.children}
+                    </RainbowKitProvider>
                 </WagmiProvider>
             </QueryClientProvider>
         </Provider>

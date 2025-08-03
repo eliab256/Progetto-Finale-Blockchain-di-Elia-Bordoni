@@ -2,7 +2,21 @@ img {
     height: 100%;
 }
 
-button {
+.headerButton button::before {
+    content: '';
+    position: absolute;
+    width: 0%;
+    height: 0.25em;
+    background: linear-gradient(to right, var(--mainPurple), white);
+    bottom: 0.5em;
+    transition: 0.5s;
+    border-radius: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.headerButton button:hover::before {
+    width: 60%;
 }
 
 .headerButtonContainer {
@@ -12,8 +26,22 @@ button {
 }
 
 .headerButton {
-    height: 100%;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 80px;
     margin-right: 4px;
-    cursor: pointer;
+}
+
+.headerButton button {
+    height: 100%;
+    width: 100%;
+    font-size: 110%;
+}
+
+.headerConnectButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

@@ -24,7 +24,7 @@ const Header: React.FC = () => {
                 </div>
             </div>
 
-            <div className="headerButton">
+            <div className="headerConnectButton">
                 <ConnectButton
                     accountStatus={{
                         smallScreen: 'avatar',

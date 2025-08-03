@@ -1,0 +1,28 @@
+.aboutUsContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logoImageContainer {
+    height: calc(100vh - var(--headerAndFooterHeight));
+    display: flex;
+    justify-content: center;
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+.descriptionContainer {
+}
+
+.descriptionContainer h1 {
+    text-align: center;
+    margin: 1rem;
+}
+
+.descriptionContainer p {
+    font-size: 2vw;
+    text-align: justify;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+}

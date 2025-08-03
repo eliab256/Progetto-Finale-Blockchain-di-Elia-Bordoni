@@ -9,6 +9,9 @@
     --secondGreen: rgb(90, 160, 130);
     --thirdGreen: rgb(120, 180, 150);
 
+    /* Misure*/
+    --headerAndFooterHeight: 4rem;
+
     /* default parameters */
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -21,9 +24,6 @@
     }
 }
 
-@font-face {
-}
-
 @layer base {
     body {
         min-height: 100vh;
@@ -32,13 +32,13 @@
         padding: 0;
         display: flex;
         flex-direction: column;
+        align-items: center;
     }
 
     header {
         padding: 0.5rem;
-        height: 3rem;
+        height: var(--headerAndFooterHeight);
         display: flex;
-        align-items: center;
         justify-content: space-between;
 
         position: fixed;
@@ -54,59 +54,61 @@
     }
 
     main {
-        margin-top: 3rem;
-        margin-bottom: 3rem;
+        margin-top: var(--headerAndFooterHeight);
+        display: flex;
+        width: 100%;
+        padding-left: 15rem;
+        padding-right: 15rem;
     }
 
     footer {
-        height: 3rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
         width: 100%;
     }
 
     button {
+        position: relative;
         cursor: pointer;
-        background-color: transparent;
+        background-color: inherit;
         border: none;
         border-radius: 30px;
+        font-family: 'Amatic SC', cursive;
     }
 
     button:hover {
         background-color: var(--thirdGreen);
+        color: white;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        cursor: default;
+        font-family: 'Amatic SC', cursive;
+        font-weight: bold;
     }
 
     h1 {
-        cursor: default;
         background: linear-gradient(to bottom, var(--mainPurple) 10%, var(--mainGreen) 90%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         color: transparent;
-        font-family: 'Amatic SC', cursive;
-        font-weight: bold;
+        font-size: 6vw;
+
         /* display: inline-block; */
     }
 
     h2 {
-        cursor: default;
-    }
-
-    h3 {
-        cursor: default;
-    }
-
-    h4 {
-        cursor: default;
-    }
-
-    h5 {
-        cursor: default;
-    }
-
-    h6 {
-        cursor: default;
+        font-size: 3vw;
     }
 
     p {
         cursor: default;
+        font-family: 'Dancing Script', cursive;
     }
 }
