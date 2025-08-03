@@ -1,22 +1,6 @@
-img {
+.headerButtonContainer img {
     height: 100%;
-}
-
-.headerButton button::before {
-    content: '';
-    position: absolute;
-    width: 0%;
-    height: 0.25em;
-    background: linear-gradient(to right, var(--mainPurple), white);
-    bottom: 0.5em;
-    transition: 0.5s;
-    border-radius: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.headerButton button:hover::before {
-    width: 60%;
+    cursor: pointer;
 }
 
 .headerButtonContainer {
@@ -25,19 +9,35 @@ img {
     align-items: center;
 }
 
+.headerButton button::before {
+    content: '';
+    position: absolute;
+    width: 0%;
+    height: 0.2em;
+    background: linear-gradient(to right, var(--mainPurple), white);
+    bottom: 0.3rem;
+    transition: 0.4s;
+    border-radius: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.headerButton button:hover::before {
+    width: 70%;
+}
+
 .headerButton {
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100%;
     width: 80px;
-    margin-right: 4px;
+    margin-right: 3px;
 }
 
 .headerButton button {
     height: 100%;
     width: 100%;
-    font-size: 110%;
 }
 
 .headerConnectButton {
