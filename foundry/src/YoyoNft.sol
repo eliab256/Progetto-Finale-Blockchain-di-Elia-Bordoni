@@ -7,11 +7,18 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 /**
  * @title A Yoga NFT collection
  * @author Elia Bordoni
- * @notice
- * @dev
+ * @notice This contract manages a limited collection of yoga-themed NFTs with auction integration
+ * @dev Extends ERC721 with custom minting logic, auction contract integration, and owner-only functions
+ * @dev The contract communicates with the YoyoAuction via a custom interface that only implements
  */
 
-/* Type declarations */
+/**  Type declarations 
+ * @notice Parameters structure for contract initialization
+ * @dev Used to avoid stack too deep errors in constructor
+ * @param s_baseURI the base URI for Yoyo NFTs' metadata stored in IPFS, the format of the string should be ipfs://<CID>
+ * @param i_auctionContract the address of auction contract that allows to mint new nfts
+ * @param s_basicMintPrice It is the initial mint price, also used as the auction starting bid in the YoyoAuction contract.
+*/
 struct ConstructorParams {
     string baseURI;
     address auctionContract;
@@ -75,7 +82,11 @@ contract YoyoNft is ERC721 {
         _;
     }
 
-    /* Functions */
+  /**
+  
+   * The ERC721 token is inizialized with the name "Yoyo Collection" and with the symbol "YOYO"
+   * The owner of the contract is set to be the sender of the deployment transaction
+   */
     constructor(
         ConstructorParams memory _params
     ) ERC721("Yoyo Collection", "YOYO") {
@@ -92,6 +103,7 @@ contract YoyoNft is ERC721 {
         s_basicMintPrice = _params.basicMintPrice;
     }
 
+    /* Functions */
     receive() external payable {
         revert YoyoNft__ThisContractDoesntAcceptDeposit();
     }

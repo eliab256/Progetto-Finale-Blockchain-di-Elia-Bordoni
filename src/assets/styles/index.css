@@ -2,10 +2,10 @@
 
 :root {
     /* colors */
-    --mainPurple: rgb(147, 112, 186); /* Variazioni possibili: rgb(130, 95, 170) - rgb(160, 130, 200)*/
+    --mainPurple: rgb(147, 112, 186);
     --secondPurple: rgb(130, 95, 170);
     --thirdPurple: rgb(160, 130, 200);
-    --mainGreen: rgb(106, 170, 142); /*Variazioni possibili: rgb(90, 160, 130) - rgb(120, 180, 150)*/
+    --mainGreen: rgb(106, 170, 142);
     --secondGreen: rgb(90, 160, 130);
     --thirdGreen: rgb(120, 180, 150);
 

@@ -1,0 +1,61 @@
+A flat-style digital illustration of a figure in a [specific yoga pose],
+ centered inside a detailed mandala. The figure, aura, and internal body elements
+  are in green tones (rgb(106, 170, 142), rgb(90, 160, 130), rgb(120, 180, 150)).
+   The mandala background and geometric layers are in purple tones (rgb(147, 112, 186),
+    rgb(130, 95, 170), rgb(160, 130, 200)). The figure is calm, spiritual, and symmetrical. 
+    It has a minimalistic silhouette style, soft radial lighting, and an overall sense of balance. 
+    The background is white.
+
+
+
+
+Prompt con sfondo sfumato
+
+
+Create a single spiritual yoga illustration featuring a person in [INSERIRE POSIZIONE YOGA SPECIFICA] maintaining these exact visual specifications:
+VISUAL SPECIFICATIONS:
+
+Dark green silhouette figure (rgb(90, 160, 130)) positioned at the center of an elaborate mandala design
+Mandala with intricate floral patterns, organic curved lines in artistic style, featuring lotus petals, decorative swirls, and sacred geometry elements drawn in purple outlines (rgb(147, 112, 186), rgb(130, 95, 170), rgb(160, 130, 200))
+The yoga figure should have 7 bright luminous chakra circles aligned vertically along the spine, glowing in vibrant green tones (rgb(106, 170, 142), rgb(120, 180, 150))
+Radiant green energy aura expanding outward behind the figure
+Background: soft radial gradient transitioning from light purple at the top (rgb(160, 130, 200)) to pure white at the bottom, with subtle ethereal light rays emanating from behind the mandala
+Perfect center alignment and symmetrical composition
+
+ART STYLE:
+Spiritual, mystical, clean vector illustration, high detail, sacred geometry, new age aesthetic, soft lighting, peaceful atmosphere, professional quality, 4K resolution.
+YOGA POSITION:
+QUI INSERISCI LA DESCRIZIONE SPECIFICA DELLA POSIZIONE
+
+
+
+prompt con raggi di luce
+
+Create a spiritual yoga illustration featuring a person in, 
+dark green silhouette figure positioned at the center of an elaborate mandala design. 
+The mandala should have intricate floral patterns with organic curved lines in artistic 
+style, featuring lotus petals, decorative swirls, and sacred geometry elements drawn in 
+purple outlines (rgb(147, 112, 186), rgb(130, 95, 170), rgb(160, 130, 200)). 
+
+The yoga figure should be a solid dark forest green silhouette (rgb(90, 160, 130)) with 
+7 bright luminous chakra circles aligned vertically along the spine, glowing in vibrant green 
+tones (rgb(106, 170, 142), rgb(120, 180, 150)). Behind the figure, create a radiant green 
+energy aura expanding outward.
+
+Background: bright radiant light rays emanating from the center behind the mandala, creating a 
+sunburst effect with alternating light purple (rgb(160, 130, 200)) and white rays extending 
+outward to the edges. The rays should be clean, geometric, and evenly distributed in a circular 
+pattern. The overall composition should be perfectly centered and symmetrical.
+
+Art style: spiritual, mystical, clean vector illustration, high detail, sacred geometry, new age 
+aesthetic, soft lighting, peaceful atmosphere, professional quality, 4K resolution.
+
+position: 
+
+
+
+
+
+
+
+Create a single spiritual yoga illustration featuring a person in [INSERIRE POSIZIONE YOGA SPECIFICA] maintaining these exact visual specifications: VISUAL SPECIFICATIONS: Dark green silhouette figure (rgb(90, 160, 130)) positioned at the center of an elaborate mandala design Mandala with intricate floral patterns, organic curved lines in artistic style, featuring lotus petals, decorative swirls, and sacred geometry elements drawn in purple outlines (rgb(147, 112, 186), rgb(130, 95, 170), rgb(160, 130, 200)) The yoga figure should have 7 bright luminous chakra circles aligned vertically along the spine, glowing in vibrant green tones (rgb(106, 170, 142), rgb(120, 180, 150)) Radiant green energy aura expanding outward behind the figure Background: soft vertical gradient transitioning from light purple at the top (rgb(160, 130, 200)) to pure white at the bottom, with subtle ethereal light rays emanating from behind the mandala Perfect center alignment and symmetrical composition ART STYLE: Spiritual, mystical, clean vector illustration, high detail, sacred geometry, new age aesthetic, soft lighting, peaceful atmosphere, professional quality, 4K resolution. YOGA POSITION: like omni reference, keep A green silhouette human figure (not realistic, no facial features).
