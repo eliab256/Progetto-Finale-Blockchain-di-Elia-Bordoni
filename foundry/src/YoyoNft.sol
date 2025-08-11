@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import { ERC721 } from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import { Strings } from '@openzeppelin/contracts/utils/Strings.sol';
 
 /**
  * @title A Yoga NFT collection
@@ -12,13 +12,13 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
  * @dev The contract communicates with the YoyoAuction via a custom interface that only implements
  */
 
-/**  Type declarations 
+/**  Type declarations
  * @notice Parameters structure for contract initialization
  * @dev Used to avoid stack too deep errors in constructor
  * @param s_baseURI the base URI for Yoyo NFTs' metadata stored in IPFS, the format of the string should be ipfs://<CID>
  * @param i_auctionContract the address of auction contract that allows to mint new nfts
  * @param s_basicMintPrice It is the initial mint price, also used as the auction starting bid in the YoyoAuction contract.
-*/
+ */
 struct ConstructorParams {
     string baseURI;
     address auctionContract;
@@ -54,18 +54,8 @@ contract YoyoNft is ERC721 {
     event YoyoNft__WithdrawCompleted(uint256 amount, uint256 timestamp);
     event YoyoNft__DepositCompleted(uint256 amount, uint256 timestamp);
     event YoyoNft__MintPriceUpdated(uint256 newBasicPrice, uint256 timestamp);
-    event YoyoNft__NftMinted(
-        address indexed owner,
-        uint256 indexed tokenId,
-        string tokenURI,
-        uint256 timestamp
-    );
-    event YoyoNft__NftTransferred(
-        address indexed from,
-        address indexed to,
-        uint256 indexed tokenId,
-        uint256 timestamp
-    );
+    event YoyoNft__NftMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, uint256 timestamp);
+    event YoyoNft__NftTransferred(address indexed from, address indexed to, uint256 indexed tokenId, uint256 timestamp);
 
     /* Modifiers */
     modifier yoyoOnlyOwner() {
@@ -82,14 +72,11 @@ contract YoyoNft is ERC721 {
         _;
     }
 
-  /**
-  
-   * The ERC721 token is inizialized with the name "Yoyo Collection" and with the symbol "YOYO"
-   * The owner of the contract is set to be the sender of the deployment transaction
-   */
-    constructor(
-        ConstructorParams memory _params
-    ) ERC721("Yoyo Collection", "YOYO") {
+    /**
+     * @notice The ERC721 token is inizialized with the name "Yoyo Collection" and with the symbol "YOYO"
+     * @dev The owner of the contract is set to be the sender of the deployment transaction
+     */
+    constructor(ConstructorParams memory _params) ERC721('Yoyo Collection', 'YOYO') {
         if (bytes(_params.baseURI).length == 0) {
             revert YoyoNft__ValueCantBeZero();
         }
@@ -104,6 +91,10 @@ contract YoyoNft is ERC721 {
     }
 
     /* Functions */
+    /**
+     *@dev both receive and fallback functions refuse to accept eth and force users
+     *@dev to use correct functions
+     */
     receive() external payable {
         revert YoyoNft__ThisContractDoesntAcceptDeposit();
     }
@@ -112,12 +103,15 @@ contract YoyoNft is ERC721 {
         revert YoyoNft__CallValidFunctionToInteractWithContract();
     }
 
+    /**
+     *@notice allows only the owner of the contract to widthraw founds from contract
+     */
     function withdraw() public yoyoOnlyOwner {
         uint256 contractBalance = address(this).balance;
         if (contractBalance == 0) {
             revert YoyoNft__ContractBalanceIsZero();
         }
-        (bool success, ) = payable(i_owner).call{value: contractBalance}("");
+        (bool success, ) = payable(i_owner).call{ value: contractBalance }('');
         if (success) {
             emit YoyoNft__WithdrawCompleted(contractBalance, block.timestamp);
         } else {
@@ -125,6 +119,9 @@ contract YoyoNft is ERC721 {
         }
     }
 
+    /**
+     *@notice allows only the owner of the contract to deposit founds
+     */
     function deposit() public payable yoyoOnlyOwner {
         if (msg.value == 0) {
             revert YoyoNft__ValueCantBeZero();
@@ -132,9 +129,14 @@ contract YoyoNft is ERC721 {
         emit YoyoNft__DepositCompleted(msg.value, block.timestamp);
     }
 
-    function setBasicMintPrice(
-        uint256 _newBasicPrice
-    ) public yoyoOnlyAuctionContract {
+    /**
+     *@notice It allows setting the base minting price from the auction contract.
+     *@dev This is because the logic of the auction contract must prevent the winner’s
+     *@dev auction price from being in any way lower than the mint price, which would
+     *@dev result in the minting process failing.
+     *@param _newBasicPrice  is the new minting price
+     */
+    function setBasicMintPrice(uint256 _newBasicPrice) public yoyoOnlyAuctionContract {
         if (_newBasicPrice == 0) {
             revert YoyoNft__ValueCantBeZero();
         }
@@ -143,10 +145,15 @@ contract YoyoNft is ERC721 {
         emit YoyoNft__MintPriceUpdated(_newBasicPrice, block.timestamp);
     }
 
-    function mintNft(
-        address _to,
-        uint256 _tokenId
-    ) external payable yoyoOnlyAuctionContract {
+    /**
+     *@notice It allows auction contract to mint a new Nft to send to the auction winner
+     *@dev Implementation of the safeMint function from ERC721 standard
+     *@dev create the event whit all the information for the frontend like tokenURI and tokenId
+     *@dev update tokenCounter to avoid max supply exceed
+     *@param _to it is the recipient to whom the NFT will be sent immediately after it is minted.
+     *@param _tokenId it is the unique Id of the token just minted
+     */
+    function mintNft(address _to, uint256 _tokenId) external payable yoyoOnlyAuctionContract {
         if (s_tokenCounter == MAX_NFT_SUPPLY) {
             revert YoyoNft__NftMaxSupplyReached();
         }
@@ -166,44 +173,41 @@ contract YoyoNft is ERC721 {
         string memory tokenURIComplete = tokenURI(_tokenId);
         s_tokenCounter++;
 
-        emit YoyoNft__NftMinted(
-            _to,
-            _tokenId,
-            tokenURIComplete,
-            block.timestamp
-        );
+        emit YoyoNft__NftMinted(_to, _tokenId, tokenURIComplete, block.timestamp);
     }
 
-    function transferNft(address to, uint256 tokenId) public {
-        if (to == address(0)) {
+    /**
+     *@notice Allows nft owner to transfer his nft to another user
+     *@dev Implementation of the safeTransfer function from ERC721 standard
+     *@dev create the event whit all the information for the frontend like tokenId and new owner
+     *@param _to it is the recipient to whom the NFT will be sent.
+     *@param _tokenId it is the unique Id of the token to send.
+     */
+    function transferNft(address _to, uint256 _tokenId) public {
+        if (_to == address(0)) {
             revert YoyoNft__InvalidAddress();
         }
-        if (ownerOf(tokenId) != msg.sender) {
+        if (ownerOf(_tokenId) != msg.sender) {
             revert YoyoNft__NotOwner();
         }
-        _safeTransfer(msg.sender, to, tokenId);
+        _safeTransfer(msg.sender, _to, _tokenId);
 
-        emit YoyoNft__NftTransferred(msg.sender, to, tokenId, block.timestamp);
+        emit YoyoNft__NftTransferred(msg.sender, _to, _tokenId, block.timestamp);
     }
 
-    function tokenURI(
-        uint256 _tokenId
-    ) public view override returns (string memory) {
+    /**
+     *@notice Return the complete URI of a specific token from his Id
+     *@param _tokenId it is the unique Id of the token.
+     *@return tokenURI the complete unique URI related to the specific token
+     */
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         if (_tokenId >= MAX_NFT_SUPPLY) {
             revert YoyoNft__TokenIdDoesNotExist();
         }
         if (_ownerOf(_tokenId) == address(0)) {
             revert YoyoNft__NftNotMinted();
         }
-        return
-            string(
-                abi.encodePacked(
-                    s_baseURI,
-                    "/",
-                    Strings.toString(_tokenId),
-                    ".json"
-                )
-            );
+        return string(abi.encodePacked(s_baseURI, '/', Strings.toString(_tokenId), '.json'));
     }
 
     function getBaseURI() public view returns (string memory) {
@@ -214,9 +218,7 @@ contract YoyoNft is ERC721 {
         return s_tokenCounter;
     }
 
-    function getOwnerFromTokenId(
-        uint256 tokenId
-    ) public view returns (address) {
+    function getOwnerFromTokenId(uint256 tokenId) public view returns (address) {
         return ownerOf(tokenId);
     }
 
@@ -236,9 +238,14 @@ contract YoyoNft is ERC721 {
         return s_basicMintPrice;
     }
 
-    function getIfTokenIdIsMintable(
-        uint256 _tokenId
-    ) public view returns (bool) {
+    /**
+     *@notice Checks whether a specific token ID can be minted or not.
+     *@notice This means it verifies both whether it has already been minted
+     *@notice and whether the ID is within the maximum supply.
+     *@param _tokenId it is the unique Id of the token that user want to check.
+     *@return boolean after check is complete, return fi is mintable (true) or not mintable (false)
+     */
+    function getIfTokenIdIsMintable(uint256 _tokenId) public view returns (bool) {
         return _ownerOf(_tokenId) == address(0) && _tokenId < MAX_NFT_SUPPLY;
     }
 }
