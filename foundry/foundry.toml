@@ -6,6 +6,16 @@ remappings = [
     "@openzeppelin/contracts=lib/openzeppelin-contracts/contracts",
     "@chainlink/contracts=lib/chainlink/contracts",
 ]
+
+# Etherscan settings 
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://api-sepolia.etherscan.io/api" }
+
+# RPC endpoints 
+[rpc_endpoints]
+sepolia = "${ALCHEMY_SEPOLIA_RPC_URL}"
+
+
 #match-path = "test/YoyoNft.t.sol"
 #match-path = "test/YoyoAuction.t.sol"
 
