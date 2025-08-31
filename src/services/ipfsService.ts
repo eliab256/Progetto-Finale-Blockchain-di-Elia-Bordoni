@@ -1,10 +1,6 @@
 import type { NftMetadata } from '../types/nftTypes';
 import { IPFS_GATEWAYS, getIpfsUrl, extractCidFromUri } from '../utils/ipfsUtils';
-
-interface NftMetadataWithVideo {
-    nftMetadata: NftMetadata;
-    videoUrl: string;
-}
+import type { NftMetadataWithVideo } from '../types/nftTypes';
 
 const metadataCache = new Map<string, NftMetadata>();
 

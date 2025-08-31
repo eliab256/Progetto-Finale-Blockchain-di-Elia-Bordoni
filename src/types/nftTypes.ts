@@ -23,3 +23,8 @@ export interface NftData {
     videoUrl: string;
     owner?: string;
 }
+
+export interface NftMetadataWithVideo {
+    nftMetadata: NftMetadata;
+    videoUrl: string;
+}
