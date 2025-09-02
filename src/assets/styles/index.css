@@ -120,4 +120,24 @@
         cursor: default;
         font-family: 'Dancing Script', cursive;
     }
+
+    /* Mobile Styles */
+    @media (max-width: 400px) {
+        main {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+    }
+
+    /* Tablet Styles */
+    @media (min-width: 768px) {
+        main {
+            padding-left: 5rem;
+            padding-right: 5rem;
+        }
+    }
+
+    /* Desktop Styles */
+    @media (min-width: 1024px) {
+    }
 }

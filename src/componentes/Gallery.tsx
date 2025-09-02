@@ -1,4 +1,5 @@
 import '../assets/styles/Gallery.css';
+import NftCard from './NftCard';
 // import { useSelector } from 'react-redux';
 // import { type NftTokenId } from '../redux/selectedNftSlice';
 // import type { FilterType, SortType, SortOrder } from '../types/filterTypes';
@@ -18,7 +19,9 @@ const Gallery: React.FC = () => {
             <div className="titleContainer">
                 <h1>Get your pass to the future of inner peace and mindful movement</h1>
             </div>
-            <div></div>
+            <div className="gridContainer">
+                <NftCard tokenId={1} />
+            </div>
         </div>
     );
 };
